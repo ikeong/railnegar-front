@@ -15,7 +15,7 @@
           to="/profile/support"
           class="px-3.5 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:text-primary text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-sm"
         >
-          <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 0a9 9 0 1012.728 0M12 3v9m0 0l-3.536-3.536"/></svg>
+          <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 18v-6a9 9 0 0118 0v6M3 18a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3v5zm18 0a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 022-2h3v5z"/></svg>
           <span>تیکتهای پشتیبانی</span>
         </NuxtLink>
       </div>
@@ -116,7 +116,7 @@
                   class="text-xs text-primary hover:text-teal-700 font-bold transition px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-200 flex items-center gap-1"
                   title="ثبت تیکت پشتیبانی متصل به این درخواست"
                 >
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 0a9 9 0 1012.728 0M12 3v9m0 0l-3.536-3.536"/></svg>
+                  <svg class="w-3.5 h-3.5 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 18v-6a9 9 0 0118 0v6M3 18a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3v5zm18 0a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 022-2h3v5z"/></svg>
                   <span>پشتیبانی این درخواست</span>
                 </button>
                 <button
@@ -269,7 +269,9 @@
         <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-              🎧
+              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 18v-6a9 9 0 0118 0v6M3 18a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3v5zm18 0a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 022-2h3v5z"/>
+              </svg>
             </div>
             <h3 class="font-bold text-gray-900 dark:text-gray-100 text-lg">ثبت تیکت پشتیبانی درخواست</h3>
           </div>
@@ -284,8 +286,9 @@
             <span class="font-bold block text-sm">شماره درخواست متصل:</span>
             <span class="font-mono font-bold" dir="ltr">#{{ selectedOrderForTicket.id }} ({{ selectedOrderForTicket.uuid?.slice(0, 8) || '' }})</span> — {{ getOrderFromName(selectedOrderForTicket) }} به {{ getOrderToName(selectedOrderForTicket) }}
           </div>
-          <span class="text-[10px] bg-blue-200 text-blue-800 font-bold px-2 py-0.5 rounded-full shrink-0">
-            ثابت و قفلشده 🔒
+          <span class="text-[10px] bg-blue-200 text-blue-800 font-bold px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
+            <svg class="w-3 h-3 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <span>ثابت و قفلشده</span>
           </span>
         </div>
 
