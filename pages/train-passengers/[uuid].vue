@@ -243,32 +243,71 @@
                   dir="ltr"
                 >
               </div>
-              <!-- Birth Date Input -->
-              <div class="md:col-span-2">
-                <div class="flex items-center justify-between mb-1.5">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ passenger.isForeign ? 'تاریخ تولد میلادی (YYYY/MM/DD)' : 'تاریخ تولد شمسی (بعد از ۱۳۰۰)' }}
+              <!-- Birth Date Input (Child / Infant ONLY — 3 Select Boxes) -->
+              <div v-if="isChildGender(passenger.gender)" class="md:col-span-2 bg-teal-50/60 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-3.5 mt-1">
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-xs sm:text-sm font-bold text-teal-900 dark:text-teal-200 flex items-center gap-1.5">
+                    <span>🎂 تاریخ تولد {{ getPassengerLabel(passenger.gender) }} *</span>
                   </label>
                   <span
                     v-if="getFormAgeCategory(passenger.birthDate, passenger.isForeign)"
                     :class="[
                       'text-xs font-bold px-2.5 py-0.5 rounded-full border',
                       getFormAgeCategory(passenger.birthDate, passenger.isForeign)?.label === 'کودک'
-                        ? 'bg-sky-50 text-sky-700 border-sky-200'
-                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        ? 'bg-sky-100 text-sky-800 border-sky-300'
+                        : 'bg-emerald-100 text-emerald-800 border-emerald-300'
                     ]"
                   >
                     {{ getFormAgeCategory(passenger.birthDate, passenger.isForeign)?.label }}
                   </span>
                 </div>
-                <input 
-                  v-model="passenger.birthDate"
-                  @input="onFormBirthDateInput($event, passenger)"
-                  type="text"
-                  class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-left ltr"
-                  :placeholder="passenger.isForeign ? '1995/08/25' : '1372/06/15'"
-                  dir="ltr"
-                >
+
+                <div class="grid grid-cols-3 gap-2">
+                  <!-- Day -->
+                  <div>
+                    <label class="block text-[11px] text-gray-500 mb-1">روز</label>
+                    <select
+                      v-model="passenger.birthDay"
+                      @change="updateChildBirthDate(passenger)"
+                      class="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+                    >
+                      <option :value="undefined" disabled>روز...</option>
+                      <option v-for="d in 31" :key="d" :value="d">
+                        {{ toPersianDigits(d) }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- Month -->
+                  <div>
+                    <label class="block text-[11px] text-gray-500 mb-1">ماه</label>
+                    <select
+                      v-model="passenger.birthMonth"
+                      @change="updateChildBirthDate(passenger)"
+                      class="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+                    >
+                      <option :value="undefined" disabled>ماه...</option>
+                      <option v-for="m in (passenger.isForeign ? miladiMonths : shamsiMonths)" :key="m.value" :value="m.value">
+                        {{ m.label }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- Year -->
+                  <div>
+                    <label class="block text-[11px] text-gray-500 mb-1">سال</label>
+                    <select
+                      v-model="passenger.birthYear"
+                      @change="updateChildBirthDate(passenger)"
+                      class="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+                    >
+                      <option :value="undefined" disabled>سال...</option>
+                      <option v-for="y in getChildYearOptions(passenger.isForeign)" :key="y" :value="y">
+                        {{ passenger.isForeign ? y : toPersianDigits(y) }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -523,16 +562,11 @@ const onPassengerSelected = (p: any) => {
   if (p.isForeign) {
     form.passportNumber = p.nationalId || ''
     form.nationalCode = ''
-    if (p.birthDate) {
-      form.birthDate = p.birthDate.slice(0, 10).replace(/-/g, '/')
-    }
   } else {
     form.nationalCode = p.nationalId || ''
     form.passportNumber = ''
-    if (p.birthDate) {
-      form.birthDate = gregorianToShamsi(p.birthDate)
-    }
   }
+
   if (p.gender === 'FEMALE') {
     if (['adult_male', 'adult_female'].includes(form.gender)) form.gender = 'adult_female'
     else if (['boy', 'girl'].includes(form.gender)) form.gender = 'girl'
@@ -540,6 +574,27 @@ const onPassengerSelected = (p: any) => {
     if (['adult_male', 'adult_female'].includes(form.gender)) form.gender = 'adult_male'
     else if (['boy', 'girl'].includes(form.gender)) form.gender = 'boy'
   }
+
+  if (isChildGender(form.gender)) {
+    if (p.birthDate) {
+      let bStr = p.birthDate
+      if (!p.isForeign && bStr.includes('-')) {
+        bStr = gregorianToShamsi(bStr)
+      } else if (p.isForeign && bStr.includes('-')) {
+        bStr = bStr.slice(0, 10).replace(/-/g, '/')
+      }
+      const digits = usePersianNumber().toLatinDigits(bStr).replace(/[^\d]/g, '')
+      if (digits.length >= 8) {
+        form.birthYear = parseInt(digits.slice(0, 4), 10)
+        form.birthMonth = parseInt(digits.slice(4, 6), 10)
+        form.birthDay = parseInt(digits.slice(6, 8), 10)
+        updateChildBirthDate(form)
+      }
+    }
+  } else {
+    form.birthDate = defaultBirthDate()
+  }
+
   showToast('success', `اطلاعات ${p.firstName} ${p.lastName} جایگذاری شد`)
 }
 
@@ -601,8 +656,72 @@ interface PassengerForm {
   isForeign: boolean
   birthDate: string
   gender: 'adult_male' | 'adult_female' | 'boy' | 'girl' | 'infant'
+  birthDay?: number
+  birthMonth?: number
+  birthYear?: number
 }
 const passengerForms = ref<PassengerForm[]>([])
+
+const isChildGender = (gender: string): boolean => {
+  return ['boy', 'girl', 'infant'].includes(gender)
+}
+
+const shamsiMonths = [
+  { value: 1, label: 'فروردین' },
+  { value: 2, label: 'اردیبهشت' },
+  { value: 3, label: 'خرداد' },
+  { value: 4, label: 'تیر' },
+  { value: 5, label: 'مرداد' },
+  { value: 6, label: 'شهریور' },
+  { value: 7, label: 'مهر' },
+  { value: 8, label: 'آبان' },
+  { value: 9, label: 'آذر' },
+  { value: 10, label: 'دی' },
+  { value: 11, label: 'بهمن' },
+  { value: 12, label: 'اسفند' }
+]
+
+const miladiMonths = [
+  { value: 1, label: 'Jan - ژانویه' },
+  { value: 2, label: 'Feb - فوریه' },
+  { value: 3, label: 'Mar - مارس' },
+  { value: 4, label: 'Apr - آوریل' },
+  { value: 5, label: 'May - مه' },
+  { value: 6, label: 'Jun - ژوئن' },
+  { value: 7, label: 'Jul - ژوئیه' },
+  { value: 8, label: 'Aug - اوت' },
+  { value: 9, label: 'Sep - سپتامبر' },
+  { value: 10, label: 'Oct - اکتبر' },
+  { value: 11, label: 'Nov - نوامبر' },
+  { value: 12, label: 'Dec - دسامبر' }
+]
+
+const getChildYearOptions = (isForeign: boolean) => {
+  if (isForeign) {
+    const currentYear = new Date().getFullYear()
+    const years = []
+    for (let y = currentYear - 12; y <= currentYear; y++) {
+      years.push(y)
+    }
+    return years.reverse()
+  } else {
+    const currentShamsi = 1405
+    const years = []
+    for (let y = currentShamsi - 12; y <= currentShamsi; y++) {
+      years.push(y)
+    }
+    return years.reverse()
+  }
+}
+
+const updateChildBirthDate = (passenger: PassengerForm) => {
+  if (passenger.birthDay && passenger.birthMonth && passenger.birthYear) {
+    const dStr = String(passenger.birthDay).padStart(2, '0')
+    const mStr = String(passenger.birthMonth).padStart(2, '0')
+    const yStr = String(passenger.birthYear)
+    passenger.birthDate = `${yStr}/${mStr}/${dStr}`
+  }
+}
 
 const getPassengerLabel = (gender: string): string => {
   const labels: Record<string, string> = {
@@ -683,9 +802,9 @@ onMounted(async () => {
     const defBirth = defaultBirthDate()
     for (let i = 0; i < pd.men; i++) forms.push({ firstName: '', lastName: '', nationalCode: '', passportNumber: '', isForeign: false, birthDate: defBirth, gender: 'adult_male' })
     for (let i = 0; i < pd.women; i++) forms.push({ firstName: '', lastName: '', nationalCode: '', passportNumber: '', isForeign: false, birthDate: defBirth, gender: 'adult_female' })
-    for (let i = 0; i < pd.boys; i++) forms.push({ firstName: '', lastName: '', nationalCode: '', passportNumber: '', isForeign: false, birthDate: defBirth, gender: 'boy' })
-    for (let i = 0; i < pd.girls; i++) forms.push({ firstName: '', lastName: '', nationalCode: '', passportNumber: '', isForeign: false, birthDate: defBirth, gender: 'girl' })
-    for (let i = 0; i < pd.infants; i++) forms.push({ firstName: '', lastName: '', nationalCode: '', passportNumber: '', isForeign: false, birthDate: defBirth, gender: 'infant' })
+    for (let i = 0; i < pd.boys; i++) forms.push({ firstName: '', lastName: '', nationalCode: '', passportNumber: '', isForeign: false, birthDate: '1400/01/01', birthYear: 1400, birthMonth: 1, birthDay: 1, gender: 'boy' })
+    for (let i = 0; i < pd.girls; i++) forms.push({ firstName: '', lastName: '', nationalCode: '', passportNumber: '', isForeign: false, birthDate: '1400/01/01', birthYear: 1400, birthMonth: 1, birthDay: 1, gender: 'girl' })
+    for (let i = 0; i < pd.infants; i++) forms.push({ firstName: '', lastName: '', nationalCode: '', passportNumber: '', isForeign: false, birthDate: '1404/01/01', birthYear: 1404, birthMonth: 1, birthDay: 1, gender: 'infant' })
     passengerForms.value = forms
   } else if (typeof p === 'number') {
     totalPassengers.value = p || 1
