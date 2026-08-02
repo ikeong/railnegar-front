@@ -78,7 +78,7 @@
                   </span>
                 </div>
                 <div class="text-xs text-gray-500 mt-1 flex items-center gap-2 flex-wrap">
-                  <span v-if="p.nationalId" class="font-mono font-bold" dir="ltr">{{ p.isForeign ? p.nationalId : toPersianDigits(p.nationalId) }}</span>
+                  <span v-if="p.nationalId" :class="p.isForeign ? 'font-mono font-bold' : 'font-sans font-bold'" :dir="p.isForeign ? 'ltr' : 'rtl'">{{ p.isForeign ? p.nationalId : toPersianDigits(p.nationalId) }}</span>
                   <span v-if="p.isForeign" class="bg-amber-50 text-amber-600 border border-amber-200 rounded-full px-2 py-0.5">اتباع</span>
                   <span class="bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">{{ p.gender === 'MALE' ? 'مرد' : 'زن' }}</span>
                   <span v-if="p.birthDate" class="text-gray-400">{{ p.isForeign ? p.birthDate.slice(0, 10) : formatShamsiDate(p.birthDate) }}</span>

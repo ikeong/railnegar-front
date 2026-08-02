@@ -220,10 +220,10 @@
                   type="text"
                   required
                   maxlength="10"
-                  class="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ltr text-left font-mono font-bold"
+                  class="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-right font-sans font-bold"
                   :class="passenger.nationalCode && !isValidNationalCode(passenger.nationalCode) ? 'border-red-400 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'"
                   placeholder="۱۰ رقم"
-                  dir="ltr"
+                  dir="rtl"
                 >
                 <p v-if="passenger.nationalCode && !isValidNationalCode(passenger.nationalCode)" class="text-xs text-red-500 mt-1">
                   کد ملی نامعتبر

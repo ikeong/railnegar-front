@@ -145,7 +145,7 @@
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2 flex-wrap">
                   <!-- National ID: Iranian = Persian digits, Foreign passport = English digits -->
-                  <span v-if="p.nationalId" class="font-mono font-bold" dir="ltr">
+                  <span v-if="p.nationalId" :class="p.isForeign ? 'font-mono font-bold' : 'font-sans font-bold'" :dir="p.isForeign ? 'ltr' : 'rtl'">
                     {{ p.isForeign ? p.nationalId : toPersianDigits(p.nationalId) }}
                   </span>
                   <span v-if="p.isForeign" class="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold rounded-full px-2 py-0.2">

@@ -182,7 +182,7 @@
                     <span class="font-medium text-gray-900 truncate">{{ getPassengerName(rp) }}</span>
                   </div>
                   <div class="flex items-center gap-3 shrink-0">
-                    <span v-if="rp.passenger?.nationalId" class="text-xs text-gray-500 font-mono font-bold" dir="ltr">{{ rp.passenger?.isForeign ? rp.passenger.nationalId : toPersianDigits(rp.passenger.nationalId) }}</span>
+                    <span v-if="rp.passenger?.nationalId" class="text-xs text-gray-500 font-bold" :class="rp.passenger?.isForeign ? 'font-mono' : 'font-sans'" :dir="rp.passenger?.isForeign ? 'ltr' : 'rtl'">{{ rp.passenger?.isForeign ? rp.passenger.nationalId : toPersianDigits(rp.passenger.nationalId) }}</span>
                     <span v-if="rp.passenger?.isForeign" class="text-[10px] text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">اتباع</span>
                     <span v-if="rp.ageGroup" class="text-[10px] text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">{{ getAgeGroupLabel(rp.ageGroup) }}</span>
                   </div>
