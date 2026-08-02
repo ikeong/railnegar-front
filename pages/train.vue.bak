@@ -1,0 +1,857 @@
+<template>
+    <div class="train-page min-h-screen py-6 px-4 bg-gray-50" dir="rtl">
+      <div class="max-w-4xl mx-auto">
+        <h1 class="font-heading text-xl sm:text-2xl font-black text-center mb-6 text-gray-900">
+          {{ $t('ticket') }}
+        </h1>
+
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-6">
+          <form @submit.prevent="handleSearch" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- مبدأ Section -->
+            <div class="md:col-span-2">
+              <div class="bg-primary text-white rounded-xl p-1 mb-2 shadow-sm">
+                <div class="px-3 py-2">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                      <MapPinIcon class="w-5 h-5" />
+                      <span class="font-bold">مبدا را انتخاب کنید</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="button"
+                        @click="searchParams.originsMode = 'single'"
+                        :class="[
+                          'px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm',
+                          searchParams.originsMode === 'single'
+                            ? 'bg-white text-primary'
+                            : 'bg-white/20 text-white hover:bg-white/30'
+                        ]"
+                      >
+                        یک مبدا
+                      </button>
+                      <button
+                        type="button"
+                        @click="searchParams.originsMode = 'multiple'"
+                        :class="[
+                          'px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm',
+                          searchParams.originsMode === 'multiple'
+                            ? 'bg-white text-primary'
+                            : 'bg-white/20 text-white hover:bg-white/30'
+                        ]"
+                      >
+                        چند مبدا
+                      </button>
+                    </div>
+                  </div>
+                  <div v-if="searchParams.origins.length > 0" class="text-right text-sm font-bold opacity-90">
+                    مبداها : {{ searchParams.origins.map(id => getCityName(id)).join(' – ') }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white border-2 border-gray-200 rounded-xl p-3">
+                <div v-if="searchParams.originsMode === 'single'" class="relative">
+                  <div
+                    @click="openOriginModal"
+                    class="w-full p-3 border-2 border-gray-200 rounded-xl bg-white flex justify-between items-center cursor-pointer hover:border-primary/50 transition shadow-sm"
+                  >
+                    <span :class="singleOrigin ? 'text-gray-900 font-bold' : 'text-gray-400'">
+                      {{ singleOrigin ? getCityName(singleOrigin) : 'انتخاب مبدا (مثلاً تهران)' }}
+                    </span>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div v-else class="grid grid-cols-4 md:grid-cols-6 gap-2">
+                  <label
+                    v-for="city in cities"
+                    :key="city.id"
+                    class="cursor-pointer p-3 border-2 border-gray-200 rounded-xl bg-white hover:border-primary hover:bg-teal-50 transition relative"
+                    :class="searchParams.origins.includes(city.id) ? 'border-primary bg-teal-50' : ''"
+                  >
+                    <input
+                      type="checkbox"
+                      :value="city.id"
+                      v-model="searchParams.origins"
+                      class="hidden"
+                    >
+                    <span class="text-gray-900 text-sm font-bold block text-center">
+                      {{ city.name }}
+                    </span>
+                    <div v-if="searchParams.origins.includes(city.id)" class="absolute top-1 right-1">
+                      <svg class="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                   </label>
+                </div>
+              </div>
+             </div>
+
+            <!-- مقصد Section -->
+            <div class="md:col-span-2">
+              <div class="bg-primary text-white rounded-xl p-1 mb-2 shadow-sm">
+                <div class="px-3 py-2">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                      <MapPinIcon class="w-5 h-5" />
+                      <span class="font-bold">مقصد را انتخاب کنید</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="button"
+                        @click="searchParams.destinationMode = 'single'"
+                        :class="[
+                          'px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm',
+                          searchParams.destinationMode === 'single'
+                            ? 'bg-white text-primary'
+                            : 'bg-white/20 text-white hover:bg-white/30'
+                        ]"
+                      >
+                        یک مقصد
+                      </button>
+                      <button
+                        type="button"
+                        @click="searchParams.destinationMode = 'multiple'"
+                        :class="[
+                          'px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm',
+                          searchParams.destinationMode === 'multiple'
+                            ? 'bg-white text-primary'
+                            : 'bg-white/20 text-white hover:bg-white/30'
+                        ]"
+                      >
+                        چند مقصد
+                      </button>
+                    </div>
+                  </div>
+                  <div v-if="searchParams.destinationMode === 'single' && searchParams.destination" class="text-right text-sm font-bold opacity-90">
+                    مقصد : {{ getCityName(searchParams.destination) }}
+                  </div>
+                  <div v-else-if="searchParams.destinationMode === 'multiple' && searchParams.destinations.length > 0" class="text-right text-sm font-bold opacity-90">
+                    مقصدها : {{ searchParams.destinations.map(id => getCityName(id)).join(' – ') }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white border-2 border-gray-200 rounded-xl p-3">
+                <div v-if="searchParams.destinationMode === 'single'" class="relative">
+                  <div
+                    @click="openDestModal"
+                    class="w-full p-3 border-2 border-gray-200 rounded-xl bg-white flex justify-between items-center cursor-pointer hover:border-primary/50 transition shadow-sm"
+                  >
+                    <span :class="searchParams.destination ? 'text-gray-900 font-bold' : 'text-gray-400'">
+                      {{ searchParams.destination ? getCityName(searchParams.destination) : 'انتخاب مقصد (مثلاً مشهد)' }}
+                    </span>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div v-else class="grid grid-cols-4 md:grid-cols-6 gap-2">
+                  <label
+                    v-for="city in availableDestinations"
+                    :key="city.id"
+                    class="cursor-pointer p-3 border-2 border-gray-200 rounded-xl bg-white hover:border-primary hover:bg-teal-50 transition relative"
+                    :class="searchParams.destinations.includes(city.id) ? 'border-primary bg-teal-50' : ''"
+                  >
+                    <input
+                      type="checkbox"
+                      :value="city.id"
+                      v-model="searchParams.destinations"
+                      class="hidden"
+                    >
+                    <span class="text-gray-900 text-sm font-bold block text-center">
+                      {{ city.name }}
+                    </span>
+                    <div v-if="searchParams.destinations.includes(city.id)" class="absolute top-1 right-1">
+                      <svg class="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                   </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- تاریخ Section -->
+            <div class="md:col-span-2">
+              <CustomDatePicker
+                v-model="searchParams.date as string"
+                date-picker-name="travel-date"
+              />
+            </div>
+
+            <!-- Warning Banner for Multi-Origin -->
+            <div v-if="searchParams.originsMode === 'multiple' && searchParams.origins.length > 1" class="md:col-span-2">
+              <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow-sm">
+                <div class="flex items-start gap-3">
+                  <ExclamationTriangleIcon class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 class="font-bold text-yellow-800 mb-1 text-sm">
+                      هشدار: چند مبدا انتخاب شده
+                    </h3>
+                    <p class="text-sm text-yellow-700">
+                      هزینه خدمات برای هر مبدا اضافی {{ toPersianDigits('50') }} هزار تومان افزایش می‌یابد.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- تعداد مسافر Section -->
+            <div>
+              <div class="bg-primary text-white rounded-xl p-1 mb-2 shadow-sm">
+                <div class="px-3 py-2">
+                  <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zM15 7a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span class="font-bold">تعداد مسافر</span>
+                  </div>
+                  <div class="text-right text-sm font-bold opacity-90">
+                    <span>{{ toPersianDigits(getTotalPassengers().toString()) }} مسافر</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white border-2 border-gray-200 rounded-xl p-3 space-y-2">
+                <div class="flex items-center justify-between p-3 border-2 border-gray-200 rounded-xl bg-white hover:border-primary/50 transition">
+                  <span class="text-gray-900 text-sm font-bold">مرد</span>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      @click="adjustPassengerCount('men', -1)"
+                      class="w-8 h-8 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition flex items-center justify-center font-bold"
+                      :disabled="searchParams.passengers.men === 0"
+                      :class="searchParams.passengers.men === 0 ? 'opacity-50 cursor-not-allowed' : ''"
+                    >
+                      −
+                    </button>
+                    <span class="w-8 text-center font-bold text-gray-900">
+                      {{ toPersianDigits(searchParams.passengers.men.toString()) }}
+                    </span>
+                    <button
+                      type="button"
+                      @click="adjustPassengerCount('men', 1)"
+                      class="w-8 h-8 rounded-full bg-primary text-white hover:bg-teal-600 transition flex items-center justify-center font-bold shadow-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 border-2 border-gray-200 rounded-xl bg-white hover:border-primary/50 transition">
+                  <span class="text-gray-900 text-sm font-bold">زن</span>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      @click="adjustPassengerCount('women', -1)"
+                      class="w-8 h-8 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition flex items-center justify-center font-bold"
+                      :disabled="searchParams.passengers.women === 0"
+                      :class="searchParams.passengers.women === 0 ? 'opacity-50 cursor-not-allowed' : ''"
+                    >
+                      −
+                    </button>
+                    <span class="w-8 text-center font-bold text-gray-900">
+                      {{ toPersianDigits(searchParams.passengers.women.toString()) }}
+                    </span>
+                    <button
+                      type="button"
+                      @click="adjustPassengerCount('women', 1)"
+                      class="w-8 h-8 rounded-full bg-primary text-white hover:bg-teal-600 transition flex items-center justify-center font-bold shadow-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 border-2 border-gray-200 rounded-xl bg-white hover:border-primary/50 transition">
+                  <span class="text-gray-900 text-sm font-bold">کودک پسر زیر ۱۲ سال</span>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      @click="adjustPassengerCount('boys', -1)"
+                      class="w-8 h-8 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition flex items-center justify-center font-bold"
+                      :disabled="searchParams.passengers.boys === 0"
+                      :class="searchParams.passengers.boys === 0 ? 'opacity-50 cursor-not-allowed' : ''"
+                    >
+                      −
+                    </button>
+                    <span class="w-8 text-center font-bold text-gray-900">
+                      {{ toPersianDigits(searchParams.passengers.boys.toString()) }}
+                    </span>
+                    <button
+                      type="button"
+                      @click="adjustPassengerCount('boys', 1)"
+                      class="w-8 h-8 rounded-full bg-primary text-white hover:bg-teal-600 transition flex items-center justify-center font-bold shadow-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 border-2 border-gray-200 rounded-xl bg-white hover:border-primary/50 transition">
+                  <span class="text-gray-900 text-sm font-bold">کودک دختر زیر ۱۲ سال</span>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      @click="adjustPassengerCount('girls', -1)"
+                      class="w-8 h-8 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition flex items-center justify-center font-bold"
+                      :disabled="searchParams.passengers.girls === 0"
+                      :class="searchParams.passengers.girls === 0 ? 'opacity-50 cursor-not-allowed' : ''"
+                    >
+                      −
+                    </button>
+                    <span class="w-8 text-center font-bold text-gray-900">
+                      {{ toPersianDigits(searchParams.passengers.girls.toString()) }}
+                    </span>
+                    <button
+                      type="button"
+                      @click="adjustPassengerCount('girls', 1)"
+                      class="w-8 h-8 rounded-full bg-primary text-white hover:bg-teal-600 transition flex items-center justify-center font-bold shadow-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 border-2 border-gray-200 rounded-xl bg-white hover:border-primary/50 transition">
+                  <span class="text-gray-900 text-sm font-bold">نوزاد</span>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      @click="adjustPassengerCount('infants', -1)"
+                      class="w-8 h-8 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition flex items-center justify-center font-bold"
+                      :disabled="searchParams.passengers.infants === 0"
+                      :class="searchParams.passengers.infants === 0 ? 'opacity-50 cursor-not-allowed' : ''"
+                    >
+                      −
+                    </button>
+                    <span class="w-8 text-center font-bold text-gray-900">
+                      {{ toPersianDigits(searchParams.passengers.infants.toString()) }}
+                    </span>
+                    <button
+                      type="button"
+                      @click="adjustPassengerCount('infants', 1)"
+                      class="w-8 h-8 rounded-full bg-primary text-white hover:bg-teal-600 transition flex items-center justify-center font-bold shadow-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- تنظیمات جستجو Section -->
+            <div>
+              <div class="bg-primary text-white rounded-xl p-1 mb-2 shadow-sm">
+                <div class="px-3 py-2">
+                  <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="font-bold">تنظیمات جستجو</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white border-2 border-gray-200 rounded-xl p-3 space-y-2">
+                <label
+                  class="flex items-center gap-3 p-3 border-2 rounded-xl bg-white cursor-pointer transition"
+                  :class="searchParams.compartmentType === 'regular' ? 'border-primary bg-teal-50' : 'border-gray-200 hover:border-primary/50'"
+                >
+                  <div class="relative flex items-center">
+                    <input
+                      type="radio"
+                      v-model="searchParams.compartmentType"
+                      value="regular"
+                      class="w-5 h-5 text-primary border-2 border-gray-300 focus:ring-primary focus:ring-2 cursor-pointer"
+                    >
+                  </div>
+                  <span class="text-sm font-bold" :class="searchParams.compartmentType === 'regular' ? 'text-primary' : 'text-gray-900'">کوپه مسافرین عادی</span>
+                </label>
+
+                <label
+                  class="flex items-center gap-3 p-3 border-2 rounded-xl bg-white cursor-pointer transition"
+                  :class="searchParams.compartmentType === 'private' ? 'border-primary bg-teal-50' : 'border-gray-200 hover:border-primary/50'"
+                >
+                  <div class="relative flex items-center">
+                    <input
+                      type="radio"
+                      v-model="searchParams.compartmentType"
+                      value="private"
+                      class="w-5 h-5 text-primary border-2 border-gray-300 focus:ring-primary focus:ring-2 cursor-pointer"
+                    >
+                  </div>
+                  <span class="text-sm font-bold" :class="searchParams.compartmentType === 'private' ? 'text-primary' : 'text-gray-900'">کوپه دربست</span>
+                </label>
+
+                <label
+                  class="flex items-center gap-3 p-3 border-2 rounded-xl bg-white cursor-pointer transition"
+                  :class="searchParams.compartmentType === 'scattered' ? 'border-primary bg-teal-50' : 'border-gray-200 hover:border-primary/50'"
+                >
+                  <div class="relative flex items-center">
+                    <input
+                      type="radio"
+                      v-model="searchParams.compartmentType"
+                      value="scattered"
+                      class="w-5 h-5 text-primary border-2 border-gray-300 focus:ring-primary focus:ring-2 cursor-pointer"
+                    >
+                  </div>
+                  <span class="text-sm font-bold" :class="searchParams.compartmentType === 'scattered' ? 'text-primary' : 'text-gray-900'">در یک کوپه یا جستجوی پراکنده</span>
+                </label>
+
+                <label
+                  class="flex items-center gap-3 p-3 border-2 rounded-xl bg-white cursor-pointer transition"
+                  :class="searchParams.compartmentType === 'sisters' ? 'border-primary bg-teal-50' : 'border-gray-200 hover:border-primary/50'"
+                >
+                  <div class="relative flex items-center">
+                    <input
+                      type="radio"
+                      v-model="searchParams.compartmentType"
+                      value="sisters"
+                      class="w-5 h-5 text-primary border-2 border-gray-300 focus:ring-primary focus:ring-2 cursor-pointer"
+                    >
+                  </div>
+                  <span class="text-sm font-bold" :class="searchParams.compartmentType === 'sisters' ? 'text-primary' : 'text-gray-900'">علاوه بر کوپه عادی، ویژه خواهران هم جستجو شود</span>
+                </label>
+
+                <label
+                  class="flex items-center gap-3 p-3 border-2 rounded-xl bg-white cursor-pointer transition"
+                  :class="searchParams.compartmentType === 'brothers' ? 'border-primary bg-teal-50' : 'border-gray-200 hover:border-primary/50'"
+                >
+                  <div class="relative flex items-center">
+                    <input
+                      type="radio"
+                      v-model="searchParams.compartmentType"
+                      value="brothers"
+                      class="w-5 h-5 text-primary border-2 border-gray-300 focus:ring-primary focus:ring-2 cursor-pointer"
+                    >
+                  </div>
+                  <span class="text-sm font-bold" :class="searchParams.compartmentType === 'brothers' ? 'text-primary' : 'text-gray-900'">علاوه بر کوپه عادی، ویژه برادران هم جستجو شود</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Multi-origin warning -->
+          <div 
+            v-if="searchParams.originsMode === 'multiple' && searchParams.origins.length > 1"
+            class="bg-amber-50 border border-amber-200 rounded-xl p-4"
+          >
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+              </svg>
+              <div>
+                <p class="font-bold text-amber-800">هشدار: چند مبدأ انتخاب شده</p>
+                <p class="text-amber-700 mt-1 text-sm">
+                  هزینه خدمات برای هر مبدأ اضافی 
+                  <span class="font-bold">{{ formatPrice(pricingInfo?.extraRouteFeeRegular || 50) }}</span>
+                  هزار تومان به ازای هر مسافر افزایش می‌یابد.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-center pt-2">
+            <button
+              type="submit"
+              :disabled="searchParams.origins.length === 0 || (searchParams.destinationMode === 'single' ? !searchParams.destination : searchParams.destinations.length === 0) || getTotalPassengers() === 0"
+              class="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-teal-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            >
+              جستجوی قطار
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- Origin Modal -->
+    <Transition name="modal-slide">
+      <div v-if="originModalOpen" class="fixed inset-0 z-50 flex items-end md:items-center justify-center transition-opacity" @click.self="originModalOpen = false">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" @click="originModalOpen = false"></div>
+        <div class="bg-white w-full md:w-[480px] rounded-t-3xl md:rounded-2xl h-[85vh] md:h-auto md:max-h-[80vh] flex flex-col z-10 shadow-2xl relative">
+          <!-- Header -->
+          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white rounded-t-3xl md:rounded-t-2xl shrink-0">
+            <h3 class="font-bold text-lg text-gray-800">انتخاب مبدا</h3>
+            <button @click="originModalOpen = false" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Search Bar -->
+          <div class="p-4 border-b border-gray-100 bg-gray-50/50 shrink-0">
+            <div class="relative">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                ref="originInputRef"
+                type="text"
+                v-model="originSearchTerm"
+                placeholder="جستجوی نام شهر یا ایستگاه..."
+                class="w-full pr-10 pl-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition text-gray-900"
+              >
+            </div>
+          </div>
+          
+          <!-- List -->
+          <div class="overflow-y-auto flex-1 p-2 bg-white">
+            <ul class="space-y-1 pb-safe">
+              <li
+                v-for="city in filteredOrigins"
+                :key="city.id"
+                @click="selectOrigin(city.id)"
+                class="px-4 py-3 hover:bg-teal-50 cursor-pointer rounded-xl flex items-center justify-between transition-colors m-1"
+                :class="singleOrigin === city.id ? 'bg-teal-50 border border-teal-100' : 'border border-transparent'"
+              >
+                <div class="flex items-center gap-3">
+                   <MapPinIcon v-if="!city.isHub" class="w-5 h-5 text-gray-400" />
+                   <svg v-else class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 2.88-2.88 7.19-5 9.88C9.88 16.19 7 11.88 7 9z" />
+                      <circle cx="12" cy="9" r="2.5" />
+                   </svg>
+                   <span class="font-bold text-gray-700" :class="singleOrigin === city.id ? 'text-primary' : ''">{{ city.name }}</span>
+                </div>
+                <span v-if="city.isHub" class="text-[10px] bg-primary/10 text-primary font-bold px-2 py-1 rounded-md">پرتردد</span>
+              </li>
+              <li v-if="filteredOrigins.length === 0" class="px-4 py-8 text-center text-gray-500 flex flex-col items-center">
+                <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                شهری با این نام یافت نشد
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Destination Modal -->
+    <Transition name="modal-slide">
+      <div v-if="destModalOpen" class="fixed inset-0 z-50 flex items-end md:items-center justify-center transition-opacity" @click.self="destModalOpen = false">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" @click="destModalOpen = false"></div>
+        <div class="bg-white w-full md:w-[480px] rounded-t-3xl md:rounded-2xl h-[85vh] md:h-auto md:max-h-[80vh] flex flex-col z-10 shadow-2xl relative">
+          <!-- Header -->
+          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white rounded-t-3xl md:rounded-t-2xl shrink-0">
+            <h3 class="font-bold text-lg text-gray-800">انتخاب مقصد</h3>
+            <button @click="destModalOpen = false" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Search Bar -->
+          <div class="p-4 border-b border-gray-100 bg-gray-50/50 shrink-0">
+            <div class="relative">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                ref="destInputRef"
+                type="text"
+                v-model="destSearchTerm"
+                placeholder="جستجوی نام شهر یا ایستگاه..."
+                class="w-full pr-10 pl-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition text-gray-900"
+              >
+            </div>
+          </div>
+          
+          <!-- List -->
+          <div class="overflow-y-auto flex-1 p-2 bg-white">
+            <ul class="space-y-1 pb-safe">
+              <li
+                v-for="city in filteredDests"
+                :key="city.id"
+                @click="selectDest(city.id)"
+                class="px-4 py-3 hover:bg-teal-50 cursor-pointer rounded-xl flex items-center justify-between transition-colors m-1"
+                :class="searchParams.destination === city.id ? 'bg-teal-50 border border-teal-100' : 'border border-transparent'"
+              >
+                <div class="flex items-center gap-3">
+                   <MapPinIcon v-if="!city.isHub" class="w-5 h-5 text-gray-400" />
+                   <svg v-else class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 2.88-2.88 7.19-5 9.88C9.88 16.19 7 11.88 7 9z" />
+                      <circle cx="12" cy="9" r="2.5" />
+                   </svg>
+                   <span class="font-bold text-gray-700" :class="searchParams.destination === city.id ? 'text-primary' : ''">{{ city.name }}</span>
+                </div>
+                <span v-if="city.isHub" class="text-[10px] bg-primary/10 text-primary font-bold px-2 py-1 rounded-md">پرتردد</span>
+              </li>
+              <li v-if="filteredDests.length === 0" class="px-4 py-8 text-center text-gray-500 flex flex-col items-center">
+                <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                شهری با این نام یافت نشد
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ExclamationTriangleIcon, MapPinIcon } from '@heroicons/vue/24/solid'
+import { usePersianNumber } from '~/composables/utils/usePersianNumber'
+import CustomDatePicker from '~/components/ui/CustomDatePicker.vue'
+import { useSearch, cities, type City } from '~/stores/search'
+
+const { formatPrice, toPersianDigits } = usePersianNumber()
+const searchStore = useSearch()
+
+const searchParams = ref({
+  origins: [1] as number[],
+  destination: 191 as number | string,
+  destinations: [] as number[],
+  originsMode: 'single' as 'single' | 'multiple',
+  destinationMode: 'single' as 'single' | 'multiple',
+  date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+  passengers: {
+    men: 0,
+    women: 0,
+    boys: 0,
+    girls: 0,
+    infants: 0
+  },
+  compartmentType: 'regular' as 'regular' | 'private' | 'scattered' | 'sisters' | 'brothers'
+})
+
+const singleOrigin = ref<number | ''>(searchParams.value.originsMode === 'single' && searchParams.value.origins.length > 0 ? (searchParams.value.origins[0] ?? '') : '')
+
+onMounted(async () => {
+  await searchStore.fetchStations()
+  await searchStore.fetchPricing()
+})
+
+const pricingInfo = computed(() => {
+  return searchStore.pricingData.value?.serviceFee || null
+})
+
+const getCityName = (id: number | string) => {
+  if (!id) return ''
+  const city = cities.find(c => c.id === Number(id))
+  return city ? city.name : ''
+}
+
+// Autocomplete state for Origins
+const originSearchTerm = ref('')
+const originModalOpen = ref(false)
+const originInputRef = ref<HTMLInputElement | null>(null)
+
+const openOriginModal = () => {
+  originSearchTerm.value = '' // clear search on open
+  originModalOpen.value = true
+}
+
+const filteredOrigins = computed(() => {
+  let list = cities
+  if (originSearchTerm.value) {
+    list = list.filter(c => c.name.includes(originSearchTerm.value))
+  }
+  // Sort by isHub (true first)
+  return list.sort((a, b) => (b.isHub === a.isHub) ? 0 : b.isHub ? 1 : -1)
+})
+
+const selectOrigin = (id: number) => {
+  singleOrigin.value = id
+  originSearchTerm.value = getCityName(id)
+  originModalOpen.value = false
+  handleSingleOriginChange()
+}
+
+// Initialize searchTerm if value already exists
+watch(() => singleOrigin.value, (newVal) => {
+  if (newVal) originSearchTerm.value = getCityName(newVal)
+}, { immediate: true })
+
+// Autocomplete state for Destinations  
+const destSearchTerm = ref('')
+const destModalOpen = ref(false)
+const destInputRef = ref<HTMLInputElement | null>(null)
+
+const openDestModal = () => {
+  destSearchTerm.value = '' // clear search on open
+  destModalOpen.value = true
+}
+
+const filteredDests = computed(() => {
+  let list = availableDestinations.value
+  if (destSearchTerm.value) {
+    list = list.filter(c => c.name.includes(destSearchTerm.value))
+  }
+  return list.sort((a, b) => (b.isHub === a.isHub) ? 0 : b.isHub ? 1 : -1)
+})
+
+const selectDest = (id: number) => {
+  searchParams.value.destination = id
+  destSearchTerm.value = getCityName(id)
+  destModalOpen.value = false
+}
+
+watch(() => searchParams.value.destination, (newVal) => {
+  if (newVal) destSearchTerm.value = getCityName(newVal)
+}, { immediate: true })
+
+const availableDestinations = computed(() => {
+  return cities.filter(city => !searchParams.value.origins.includes(city.id))
+})
+
+const handleSingleOriginChange = () => {
+  if (singleOrigin.value) {
+    searchParams.value.origins = [Number(singleOrigin.value)]
+  } else {
+    searchParams.value.origins = []
+  }
+}
+
+const adjustPassengerCount = (type: 'men' | 'women' | 'boys' | 'girls' | 'infants', delta: number) => {
+  const currentValue = searchParams.value.passengers[type]
+  const newValue = currentValue + delta
+
+  if (newValue >= 0 && newValue <= 9) {
+    searchParams.value.passengers[type] = newValue
+  }
+}
+
+const getTotalPassengers = () => {
+  const p = searchParams.value.passengers
+  return p.men + p.women + p.boys + p.girls + p.infants
+}
+
+watch(() => searchParams.value.origins, (newOrigins) => {
+  if (searchParams.value.originsMode === 'single' && newOrigins.length > 0) {
+    singleOrigin.value = newOrigins[0] ?? ''
+  }
+  if (searchParams.value.destination && newOrigins.includes(Number(searchParams.value.destination))) {
+    searchParams.value.destination = ''
+  }
+}, { deep: true })
+
+watch(() => searchParams.value.originsMode, (newMode) => {
+  if (newMode === 'single' && searchParams.value.origins.length > 1) {
+    const firstOrigin = searchParams.value.origins[0]
+    if (firstOrigin !== undefined) {
+      searchParams.value.origins = [firstOrigin]
+      singleOrigin.value = firstOrigin
+    }
+  } else if (newMode === 'multiple' && singleOrigin.value) {
+    singleOrigin.value = ''
+  }
+})
+
+watch(() => searchParams.value.destinationMode, (newMode) => {
+  if (newMode === 'single' && searchParams.value.destinations.length > 0) {
+    const firstDestination = searchParams.value.destinations[0]
+    if (firstDestination !== undefined) {
+      searchParams.value.destination = firstDestination
+      searchParams.value.destinations = []
+    }
+  } else if (newMode === 'multiple' && searchParams.value.destination) {
+    searchParams.value.destinations = [Number(searchParams.value.destination)]
+    searchParams.value.destination = ''
+  }
+})
+
+watch(() => searchParams.value.destination, (newDestination) => {
+  if (newDestination && searchParams.value.origins.includes(Number(newDestination))) {
+    searchParams.value.origins = searchParams.value.origins.filter(id => id !== Number(newDestination))
+  }
+})
+
+watch(() => searchParams.value.destinations, (newDestinations) => {
+  // Remove any destinations that are also selected as origins
+  const conflictingDestinations = newDestinations.filter(id => searchParams.value.origins.includes(id))
+  if (conflictingDestinations.length > 0) {
+    searchParams.value.origins = searchParams.value.origins.filter(id => !conflictingDestinations.includes(id))
+  }
+}, { deep: true })
+
+const handleSearch = () => {
+  const searchStore = useSearch()
+
+  // Parse multiple dates (comma-separated from DatePicker)
+  const dates = (searchParams.value.date || '')
+    .split(',')
+    .map(d => d.trim())
+    .filter(d => d.length > 0)
+  
+  // Compute all route combinations
+  let routeDestinations: number[] = []
+  if (searchParams.value.destinationMode === 'single' && searchParams.value.destination) {
+    routeDestinations = [Number(searchParams.value.destination)]
+  } else if (searchParams.value.destinationMode === 'multiple') {
+    routeDestinations = searchParams.value.destinations
+  }
+  
+  const routes = searchParams.value.origins.flatMap(fromId =>
+    routeDestinations.map(toId => ({
+      from: fromId,
+      to: toId,
+      fromName: getCityName(fromId),
+      toName: getCityName(toId)
+    }))
+  )
+
+  const paramsToSave = {
+    origins: searchParams.value.origins,
+    destination: searchParams.value.destination ? Number(searchParams.value.destination) : 0,
+    destinations: searchParams.value.destinations,
+    originsMode: searchParams.value.originsMode,
+    destinationMode: searchParams.value.destinationMode,
+    date: searchParams.value.date as string,
+    dates,
+    routes,
+    passengers: searchParams.value.passengers as { men: number; women: number; boys: number; girls: number; infants: number },
+    selectedTrainIds: [] as string[],
+    compartmentType: searchParams.value.compartmentType
+  }
+  searchStore.setParams(paramsToSave)
+
+  // Build query params for refreshable URL
+  const query: Record<string, string> = {
+    origins: searchParams.value.origins.join(','),
+    destinations: (searchParams.value.destinationMode === 'single'
+      ? [searchParams.value.destination || 0]
+      : searchParams.value.destinations).join(','),
+    dates: dates.join(','),
+    p: `${searchParams.value.passengers.men}-${searchParams.value.passengers.women}-${searchParams.value.passengers.boys}-${searchParams.value.passengers.girls}-${searchParams.value.passengers.infants}`,
+    om: searchParams.value.originsMode,
+    dm: searchParams.value.destinationMode,
+    ct: searchParams.value.compartmentType
+  }
+  navigateTo({ path: '/train-results', query })
+}
+</script>
+
+<style scoped>
+.modal-slide-enter-active,
+.modal-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.modal-slide-enter-from,
+.modal-slide-leave-to {
+  opacity: 0;
+  transform: translateY(100%);
+}
+@media (min-width: 768px) {
+  .modal-slide-enter-from,
+  .modal-slide-leave-to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+</style>
