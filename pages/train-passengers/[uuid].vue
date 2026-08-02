@@ -238,8 +238,8 @@
                   v-model="passenger.passportNumber"
                   type="text"
                   required
-                  class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono font-bold"
-                  placeholder="شماره پاسپورت"
+                  class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono font-bold text-left placeholder:font-mono"
+                  placeholder="Passport No. (e.g. A1234567)"
                   dir="ltr"
                 >
               </div>

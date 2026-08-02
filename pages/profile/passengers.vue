@@ -131,9 +131,16 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs text-gray-600 mb-1.5">کد ملی / پاسپورت *</label>
-                <input v-model="editForm.nationalId" type="text" required placeholder="۱۰ رقم" dir="ltr"
-                  class="w-full p-3 border border-gray-200 rounded-xl text-sm text-left focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                <label class="block text-xs text-gray-600 mb-1.5">{{ editForm.isForeign ? 'Passport Number *' : 'کد ملی *' }}</label>
+                <input
+                  v-model="editForm.nationalId"
+                  type="text"
+                  required
+                  :placeholder="editForm.isForeign ? 'Passport No. (e.g. A1234567)' : '۱۰ رقم'"
+                  dir="ltr"
+                  :class="editForm.isForeign ? 'font-mono font-bold placeholder:font-mono' : 'font-sans font-bold'"
+                  class="w-full p-3 border border-gray-200 rounded-xl text-sm text-left focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                >
               </div>
               <div>
                 <div class="flex items-center justify-between mb-1.5">
