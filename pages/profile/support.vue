@@ -13,6 +13,23 @@
         </button>
       </div>
 
+      <!-- Guidance Banner -->
+      <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 sm:p-5 text-blue-900 mb-6 shadow-sm">
+        <div class="flex items-start gap-3">
+          <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-blue-900 mb-1">راهنمای ثبت تیکت پشتیبانی:</h3>
+            <p class="text-xs sm:text-sm text-blue-800 leading-relaxed">
+              تمامی تیکتهای پشتیبانی باید حتماً متصل به یک شماره درخواست رزرو باشند. شما میتوانید تیکت جدید را مستقیماً از صفحه
+              <NuxtLink to="/profile/orders" class="font-bold text-primary underline mx-1 hover:text-teal-700">درخواستهای رزرو</NuxtLink>
+              با کلیک روی دکمه <strong>«پشتیبانی این درخواست»</strong> ثبت کنید.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Status Tabs -->
       <div class="flex bg-white border border-gray-200 rounded-xl p-1 mb-5 gap-1 overflow-x-auto">
         <button
@@ -160,13 +177,14 @@
             </div>
 
             <div>
-              <label class="block text-xs text-gray-600 mb-1.5">اتصال به درخواست (اختیاری)</label>
+              <label class="block text-xs text-gray-600 mb-1.5">انتخاب شماره درخواست متصل (ثابت پس از ثبت) *</label>
               <select
                 v-model="createForm.requestId"
+                required
                 class="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
               >
-                <option :value="null">بدون اتصال به درخواست</option>
-                <option v-for="o in myOrders" :key="o.uuid" :value="Number(o.id)">{{ o.uuid?.slice(0, 8) || o.id }} — {{ getOrderSummary(o) }}</option>
+                <option :value="null" disabled>انتخاب درخواست مربوطه...</option>
+                <option v-for="o in myOrders" :key="o.uuid || o.id" :value="Number(o.id)">درخواست #{{ o.id }} — {{ getOrderSummary(o) }}</option>
               </select>
             </div>
 
@@ -361,12 +379,15 @@ const openCreateModal = () => {
 }
 
 const submitCreate = async () => {
-  if (!createForm.topicId || !createForm.subject || !createForm.description) return
+  if (!createForm.topicId || !createForm.requestId || !createForm.subject || !createForm.description) {
+    showToast('warning', 'لطفاً تمامی فیلدها از جمله شماره درخواست متصل را انتخاب کنید')
+    return
+  }
   createLoading.value = true
   try {
     await createTicket({
       topicId: createForm.topicId,
-      requestId: createForm.requestId || undefined,
+      requestId: createForm.requestId,
       subject: createForm.subject,
       description: createForm.description
     })

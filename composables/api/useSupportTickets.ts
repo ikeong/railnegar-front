@@ -8,7 +8,7 @@ export interface TicketTopic {
 
 export interface CreateTicketInput {
   topicId: number
-  requestId?: number
+  requestId: number
   subject: string
   description: string
 }

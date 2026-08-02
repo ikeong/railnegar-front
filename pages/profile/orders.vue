@@ -8,9 +8,17 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
           </NuxtLink>
           <h1 class="text-2xl font-bold text-gray-900">
-            {{ isTicketMode ? 'بلیط‌های من' : 'درخواست‌های رزرو' }}
+            {{ isTicketMode ? 'بلیطهای من' : 'درخواستهای رزرو' }}
           </h1>
         </div>
+        <NuxtLink
+          to="/profile/support"
+          class="px-3.5 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:text-primary text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs"
+        >
+          <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 0a9 9 0 1012.728 0M12 3v9m0 0l-3.536-3.536"/></svg>
+          <span>تیکتهای پشتیبانی</span>
+        </NuxtLink>
+      </div>
       </div>
 
       <!-- Status Tabs -->
@@ -103,7 +111,15 @@
                 <span class="text-xs text-gray-500">قابل پرداخت: </span>
                 <span class="font-bold text-primary">{{ formatPrice(order.totalPrice || order.totalAmount || 0) }} تومان</span>
               </div>
-              <div class="flex gap-2">
+              <div class="flex gap-2 flex-wrap items-center">
+                <button
+                  @click="openTicketModalForOrder(order)"
+                  class="text-xs text-primary hover:text-teal-700 font-bold transition px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-200 flex items-center gap-1"
+                  title="ثبت تیکت پشتیبانی متصل به این درخواست"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 0a9 9 0 1012.728 0M12 3v9m0 0l-3.536-3.536"/></svg>
+                  <span>پشتیبانی این درخواست</span>
+                </button>
                 <button
                   @click="toggleDetail(order)"
                   class="text-xs text-gray-500 hover:text-primary font-medium transition px-3 py-1.5 rounded-lg hover:bg-primary/5"
@@ -198,7 +214,6 @@
           </button>
         </div>
       </div>
-    </div>
 
     <!-- Cancel Confirmation Modal -->
     <div v-if="cancelTarget" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" @click.self="cancelTarget = null">
@@ -248,21 +263,149 @@
       </div>
     </div>
 
+    <!-- ===== Support Ticket Modal (Locked to requestId) ===== -->
+    <div v-if="ticketModalOpen" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50" @click.self="ticketModalOpen = false">
+      <div class="bg-white dark:bg-gray-800 w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-xl p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+              🎧
+            </div>
+            <h3 class="font-bold text-gray-900 dark:text-gray-100 text-lg">ثبت تیکت پشتیبانی درخواست</h3>
+          </div>
+          <button @click="ticketModalOpen = false" class="p-2 text-gray-400 hover:text-gray-700 rounded-full transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Locked Request ID Banner -->
+        <div v-if="selectedOrderForTicket" class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 flex items-center justify-between">
+          <div class="text-xs text-blue-900">
+            <span class="font-bold block text-sm">شماره درخواست متصل:</span>
+            <span class="font-mono font-bold" dir="ltr">#{{ selectedOrderForTicket.id }} ({{ selectedOrderForTicket.uuid?.slice(0, 8) || '' }})</span> — {{ getOrderFromName(selectedOrderForTicket) }} به {{ getOrderToName(selectedOrderForTicket) }}
+          </div>
+          <span class="text-[10px] bg-blue-200 text-blue-800 font-bold px-2 py-0.5 rounded-full shrink-0">
+            ثابت و قفلشده 🔒
+          </span>
+        </div>
+
+        <form @submit.prevent="submitTicket" class="space-y-4">
+          <div>
+            <label class="block text-xs text-gray-600 dark:text-gray-300 mb-1.5">موضوع تیکت *</label>
+            <select
+              v-model="ticketForm.topicId"
+              required
+              class="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            >
+              <option :value="null" disabled>انتخاب موضوع پشتیبانی...</option>
+              <option v-for="tp in ticketTopics" :key="tp.id" :value="tp.id">{{ tp.title }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs text-gray-600 dark:text-gray-300 mb-1.5">عنوان تیکت *</label>
+            <input
+              v-model="ticketForm.subject"
+              type="text"
+              required
+              placeholder="خلاصه درخواست خود را بنویسید"
+              class="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            >
+          </div>
+
+          <div>
+            <label class="block text-xs text-gray-600 dark:text-gray-300 mb-1.5">شرح درخواست *</label>
+            <textarea
+              v-model="ticketForm.description"
+              required
+              rows="4"
+              placeholder="توضیحات کامل درخواست پشتیبانی..."
+              class="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            ></textarea>
+          </div>
+
+          <div class="flex gap-3 pt-2">
+            <button type="button" @click="ticketModalOpen = false" class="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition">
+              انصراف
+            </button>
+            <button type="submit" :disabled="ticketLoading" class="flex-1 py-3 rounded-xl bg-primary text-white text-sm font-bold hover:bg-teal-600 transition disabled:opacity-50">
+              <span v-if="ticketLoading">در حال ثبت...</span>
+              <span v-else>ثبت تیکت</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <Toast :show="toast.show" :type="toast.type" :message="toast.message" @hide="toast.show = false" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useOrders } from '~/composables/api/useOrders'
+import { useSupportTickets, type TicketTopic } from '~/composables/api/useSupportTickets'
 import { usePersianNumber } from '~/composables/utils/usePersianNumber'
 import { useSearch } from '~/stores/search'
 import Toast from '~/components/ui/Toast.vue'
 
 const { formatPrice, toPersianDigits } = usePersianNumber()
 const { getOrders, cancelOrder } = useOrders()
+const { getTopics, createTicket } = useSupportTickets()
 const searchStore = useSearch()
 
 const route = useRoute()
+
+// Support Ticket Modal state
+const ticketModalOpen = ref(false)
+const ticketLoading = ref(false)
+const selectedOrderForTicket = ref<any>(null)
+const ticketTopics = ref<TicketTopic[]>([])
+const ticketForm = reactive<{ topicId: number | null; subject: string; description: string }>({
+  topicId: null,
+  subject: '',
+  description: ''
+})
+
+const fetchTicketTopics = async () => {
+  try {
+    const res = await getTopics() as any
+    const data = res?.data || res || []
+    ticketTopics.value = Array.isArray(data) ? data : data.items || []
+  } catch (err) {
+    console.error('Failed to load ticket topics:', err)
+  }
+}
+
+const openTicketModalForOrder = (order: any) => {
+  selectedOrderForTicket.value = order
+  ticketForm.topicId = null
+  ticketForm.subject = ''
+  ticketForm.description = ''
+  ticketModalOpen.value = true
+  if (ticketTopics.value.length === 0) {
+    fetchTicketTopics()
+  }
+}
+
+const submitTicket = async () => {
+  if (!selectedOrderForTicket.value || !ticketForm.topicId || !ticketForm.subject || !ticketForm.description) return
+  ticketLoading.value = true
+  try {
+    await createTicket({
+      topicId: ticketForm.topicId,
+      requestId: Number(selectedOrderForTicket.value.id),
+      subject: ticketForm.subject,
+      description: ticketForm.description
+    })
+    ticketModalOpen.value = false
+    showToast('success', 'تیکت پشتیبانی برای این درخواست با موفقیت ثبت شد')
+    setTimeout(() => navigateTo('/profile/support'), 1200)
+  } catch (e: any) {
+    showToast('error', e?.data?.message || 'خطا در ثبت تیکت')
+  } finally {
+    ticketLoading.value = false
+  }
+}
 
 // Station name lookup (loaded from /public/stations)
 const stationMap = ref<Record<number, string>>({})
