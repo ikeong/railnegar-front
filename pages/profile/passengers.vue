@@ -143,30 +143,74 @@
                 >
               </div>
               <div>
-                <div class="flex items-center justify-between mb-1.5">
-                  <label class="block text-xs text-gray-600">
-                    {{ editForm.isForeign ? 'تاریخ تولد میلادی (YYYY/MM/DD)' : 'تاریخ تولد شمسی (بعد از ۱۳۰۰)' }}
-                  </label>
-                  <span
-                    v-if="getAgeCategory(editForm.birthDate, editForm.isForeign)"
-                    :class="[
-                      'text-[10px] font-bold px-2 py-0.2 rounded-full border',
-                      getAgeCategory(editForm.birthDate, editForm.isForeign)?.label === 'کودک'
-                        ? 'bg-sky-50 text-sky-700 border-sky-200'
-                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    ]"
+                <label class="block text-xs text-gray-600 mb-1.5">رده سنی مسافر</label>
+                <div class="flex bg-gray-100 p-1 rounded-xl gap-1">
+                  <button
+                    type="button"
+                    @click="editForm.isChild = false; editForm.birthDate = defaultAdultBirthDateISO()"
+                    :class="['flex-1 py-2 text-xs font-bold rounded-lg transition', !editForm.isChild ? 'bg-white text-primary shadow-xs' : 'text-gray-600']"
                   >
-                    {{ getAgeCategory(editForm.birthDate, editForm.isForeign)?.label }}
-                  </span>
+                    بزرگسال
+                  </button>
+                  <button
+                    type="button"
+                    @click="editForm.isChild = true"
+                    :class="['flex-1 py-2 text-xs font-bold rounded-lg transition', editForm.isChild ? 'bg-primary text-white shadow-xs' : 'text-gray-600']"
+                  >
+                    کودک (زیر ۱۲ سال)
+                  </button>
                 </div>
-                <input
-                  v-model="editForm.birthDate"
-                  @input="onBirthDateInput"
-                  type="text"
-                  :placeholder="editForm.isForeign ? '1995/08/25' : '1372/06/15'"
-                  dir="ltr"
-                  class="w-full p-3 border border-gray-200 rounded-xl text-sm text-left focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                >
+              </div>
+            </div>
+
+            <!-- Child Birth Date Dropdowns (ONLY shown if isChild is true) -->
+            <div v-if="editForm.isChild" class="bg-teal-50/60 border border-teal-200 rounded-xl p-3.5 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="block text-xs font-bold text-teal-900">
+                  🎂 تاریخ تولد کودک *
+                </label>
+                <span class="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-full border border-sky-300">
+                  کودک (زیر ۱۲ سال)
+                </span>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div>
+                  <label class="block text-[10px] text-gray-500 mb-1">روز</label>
+                  <select
+                    v-model="editForm.birthDay"
+                    @change="updateModalChildBirthDate"
+                    class="w-full p-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-900 focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option :value="undefined" disabled>روز...</option>
+                    <option v-for="d in 31" :key="d" :value="d">{{ toPersianDigits(d) }}</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-gray-500 mb-1">ماه</label>
+                  <select
+                    v-model="editForm.birthMonth"
+                    @change="updateModalChildBirthDate"
+                    class="w-full p-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-900 focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option :value="undefined" disabled>ماه...</option>
+                    <option v-for="m in (editForm.isForeign ? miladiMonthsModal : shamsiMonthsModal)" :key="m.value" :value="m.value">
+                      {{ m.label }}
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-gray-500 mb-1">سال</label>
+                  <select
+                    v-model="editForm.birthYear"
+                    @change="updateModalChildBirthDate"
+                    class="w-full p-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-900 focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option :value="undefined" disabled>سال...</option>
+                    <option v-for="y in getModalChildYears(editForm.isForeign)" :key="y" :value="y">
+                      {{ editForm.isForeign ? y : toPersianDigits(y) }}
+                    </option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -222,21 +266,71 @@ import {
 import { useToast } from '~/composables/useToast'
 import Toast from '~/components/ui/Toast.vue'
 
-const { formatPrice, toPersianDigits } = usePersianNumber()
+const { formatPrice, toPersianDigits, toLatinDigits } = usePersianNumber()
 const { listPassengers, savePassenger, updatePassenger, deletePassenger } = usePassengers()
 const { toast: toastState, showToast } = useToast()
 
-const getAgeCategory = (birthDateStr: string, isForeign = false) => {
-  return getPassengerAgeCategory(birthDateStr, isForeign)
+const shamsiMonthsModal = [
+  { value: 1, label: 'فروردین' },
+  { value: 2, label: 'اردیبهشت' },
+  { value: 3, label: 'خرداد' },
+  { value: 4, label: 'تیر' },
+  { value: 5, label: 'مرداد' },
+  { value: 6, label: 'شهریور' },
+  { value: 7, label: 'مهر' },
+  { value: 8, label: 'آبان' },
+  { value: 9, label: 'آذر' },
+  { value: 10, label: 'دی' },
+  { value: 11, label: 'بهمن' },
+  { value: 12, label: 'اسفند' }
+]
+
+const miladiMonthsModal = [
+  { value: 1, label: 'Jan - ژانویه' },
+  { value: 2, label: 'Feb - فوریه' },
+  { value: 3, label: 'Mar - مارس' },
+  { value: 4, label: 'Apr - آوریل' },
+  { value: 5, label: 'May - مه' },
+  { value: 6, label: 'Jun - ژوئن' },
+  { value: 7, label: 'Jul - ژوئیه' },
+  { value: 8, label: 'Aug - اوت' },
+  { value: 9, label: 'Sep - سپتامبر' },
+  { value: 10, label: 'Oct - اکتبر' },
+  { value: 11, label: 'Nov - نوامبر' },
+  { value: 12, label: 'Dec - دسامبر' }
+]
+
+const getModalChildYears = (isForeign: boolean) => {
+  if (isForeign) {
+    const currentYear = new Date().getFullYear()
+    const years = []
+    for (let y = currentYear - 12; y <= currentYear; y++) years.push(y)
+    return years.reverse()
+  } else {
+    const currentShamsi = 1405
+    const years = []
+    for (let y = currentShamsi - 12; y <= currentShamsi; y++) years.push(y)
+    return years.reverse()
+  }
 }
 
-const onBirthDateInput = (e: Event) => {
-  const input = e.target as HTMLInputElement
-  if (editForm.isForeign) {
-    editForm.birthDate = maskMiladiDate(input.value)
-  } else {
-    editForm.birthDate = maskShamsiDate(input.value)
+const updateModalChildBirthDate = () => {
+  if (editForm.birthDay && editForm.birthMonth && editForm.birthYear) {
+    const dStr = String(editForm.birthDay).padStart(2, '0')
+    const mStr = String(editForm.birthMonth).padStart(2, '0')
+    const yStr = String(editForm.birthYear)
+    editForm.birthDate = `${yStr}/${mStr}/${dStr}`
   }
+}
+
+const defaultAdultBirthDateISO = (): string => {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() - 30)
+  return d.toISOString().split('T')[0]
+}
+
+const getAgeCategory = (birthDateStr: string, isForeign = false) => {
+  return getPassengerAgeCategory(birthDateStr, isForeign)
 }
 
 const toast = reactive({
@@ -267,7 +361,11 @@ const editForm = reactive({
   birthDate: '',
   gender: 'MALE' as 'MALE' | 'FEMALE',
   phone: '',
-  isForeign: false
+  isForeign: false,
+  isChild: false,
+  birthDay: undefined as number | undefined,
+  birthMonth: undefined as number | undefined,
+  birthYear: undefined as number | undefined
 })
 
 const formatShamsiDate = (dateStr: string): string => {
@@ -305,27 +403,43 @@ const openEdit = (p: any | null) => {
     editForm.lastName = p.lastName || ''
     editForm.nationalId = p.nationalId || ''
     editForm.isForeign = !!p.isForeign
-    if (p.birthDate) {
-      if (p.isForeign) {
-        editForm.birthDate = p.birthDate.slice(0, 10).replace(/-/g, '/')
-      } else {
-        editForm.birthDate = gregorianToShamsi(p.birthDate)
-      }
-    } else {
-      editForm.birthDate = ''
-    }
     editForm.gender = p.gender === 'FEMALE' ? 'FEMALE' : 'MALE'
     editForm.phone = p.phone || ''
+
+    const ageCat = getPassengerAgeCategory(p.birthDate, p.isForeign)
+    editForm.isChild = ageCat?.label === 'کودک'
+
+    if (editForm.isChild && p.birthDate) {
+      let bStr = p.birthDate
+      if (!p.isForeign && bStr.includes('-')) {
+        bStr = gregorianToShamsi(bStr)
+      } else if (p.isForeign && bStr.includes('-')) {
+        bStr = bStr.slice(0, 10).replace(/-/g, '/')
+      }
+      const digits = toLatinDigits(bStr).replace(/[^\d]/g, '')
+      if (digits.length >= 8) {
+        editForm.birthYear = parseInt(digits.slice(0, 4), 10)
+        editForm.birthMonth = parseInt(digits.slice(4, 6), 10)
+        editForm.birthDay = parseInt(digits.slice(6, 8), 10)
+        updateModalChildBirthDate()
+      }
+    } else {
+      editForm.birthDate = defaultAdultBirthDateISO()
+    }
   } else {
     editMode.value = 'create'
     editingId.value = null
     editForm.firstName = ''
     editForm.lastName = ''
     editForm.nationalId = ''
-    editForm.birthDate = ''
     editForm.gender = 'MALE'
     editForm.phone = ''
     editForm.isForeign = false
+    editForm.isChild = false
+    editForm.birthDay = undefined
+    editForm.birthMonth = undefined
+    editForm.birthYear = undefined
+    editForm.birthDate = defaultAdultBirthDateISO()
   }
   editOpen.value = true
 }
@@ -335,12 +449,13 @@ const submitEdit = async () => {
   saving.value = true
   try {
     let finalBirthDate: string | undefined = undefined
-    if (editForm.birthDate) {
-      if (editForm.isForeign) {
-        finalBirthDate = editForm.birthDate.replace(/\//g, '-')
-      } else {
-        finalBirthDate = shamsiToGregorian(editForm.birthDate)
+    if (editForm.isChild) {
+      if (editForm.birthDate) {
+        finalBirthDate = editForm.isForeign ? editForm.birthDate.replace(/\//g, '-') : shamsiToGregorian(editForm.birthDate)
       }
+    } else {
+      // Adult → default 30 years ago
+      finalBirthDate = defaultAdultBirthDateISO()
     }
 
     const payload = {

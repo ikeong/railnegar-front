@@ -750,10 +750,10 @@ const isValidNationalCode = (code: string): boolean => {
   return expected === check
 }
 
-// Default birthDate = 20 years ago
+// Default adult birthDate = 30 years ago
 const defaultBirthDate = (): string => {
   const d = new Date()
-  d.setFullYear(d.getFullYear() - 20)
+  d.setFullYear(d.getFullYear() - 30)
   return d.toISOString().split('T')[0]
 }
 
