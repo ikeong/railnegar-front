@@ -524,10 +524,16 @@ const ticketStatusTabs = [
 const getStatusLabel = (status: string): string => {
   const labels: Record<string, string> = {
     PENDING: 'در انتظار',
-    SCHEDULED: 'زمان‌بندی شده',
+    SCHEDULED: 'زمانبندی شده',
     SEARCHING: 'در حال جستجو',
     PAUSED: 'متوقف',
+    MATCHED: 'بلیط یافت شد',
+    MATCHING: 'در حال انطباق',
+    LOCKING: 'در حال قفل صندلی',
+    LOCKED: 'صندلی قفل شد',
     TRAIN_LOCKED: 'قطار پیدا شد',
+    RESERVING: 'در حال رزرو',
+    RESERVED: 'رزرو شده',
     PARTIALLY_BOOKED: 'رزرو ناقص',
     BOOKED: 'رزرو شده',
     PAYMENT_PENDING: 'در انتظار پرداخت',
@@ -536,7 +542,7 @@ const getStatusLabel = (status: string): string => {
     COMPLETED: 'تکمیل شده',
     CANCELLED: 'لغو شده',
     EXPIRED: 'منقضی شده',
-    FAILED: 'خطا'
+    FAILED: 'ناموفق'
   }
   return labels[status] || status
 }
@@ -547,7 +553,13 @@ const getStatusStyle = (status: string): string => {
     SCHEDULED: 'bg-yellow-50 text-yellow-700 border-yellow-200',
     SEARCHING: 'bg-blue-50 text-blue-700 border-blue-200',
     PAUSED: 'bg-gray-50 text-gray-600 border-gray-200',
+    MATCHED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    MATCHING: 'bg-blue-50 text-blue-700 border-blue-200',
+    LOCKING: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    LOCKED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     TRAIN_LOCKED: 'bg-green-50 text-green-700 border-green-200',
+    RESERVING: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    RESERVED: 'bg-green-50 text-green-700 border-green-200',
     PARTIALLY_BOOKED: 'bg-amber-50 text-amber-700 border-amber-200',
     BOOKED: 'bg-green-50 text-green-700 border-green-200',
     PAYMENT_PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
