@@ -131,9 +131,21 @@
 
       <!-- Passenger Information Forms -->
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 p-6 mb-6">
-        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-          اطلاعات مسافران
-        </h3>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">
+            اطلاعات مسافران
+          </h3>
+          <button
+            type="button"
+            @click="openSelectModal(0)"
+            class="px-4 py-2 rounded-xl bg-teal-50 dark:bg-teal-900/40 text-primary border border-teal-200 dark:border-teal-700 hover:bg-teal-100 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shadow-xs"
+          >
+            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zM15 7a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span>انتخاب سریع از مسافران سابق</span>
+          </button>
+        </div>
         <div v-if="totalPassengers === 0" class="text-center py-8 text-gray-500">
           لطفاً تعداد مسافران را مشخص کنید
         </div>
@@ -144,19 +156,35 @@
             :key="pIndex"
             class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
           >
-            <h5 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-              <span class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">{{ toPersianDigits(String(pIndex + 1)) }}</span>
-              مسافر {{ toPersianDigits(String(pIndex + 1)) }}
-              <span class="text-xs text-gray-400 font-normal">({{ getPassengerLabel(passenger.gender) }})</span>
-              <label class="mr-auto flex items-center gap-1.5 text-xs cursor-pointer select-none">
-                <input 
-                  type="checkbox" 
-                  v-model="passenger.isForeign"
-                  class="w-3.5 h-3.5 text-primary rounded border-gray-300 focus:ring-primary"
+            <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">{{ toPersianDigits(String(pIndex + 1)) }}</span>
+                <h5 class="text-sm font-bold text-gray-700 dark:text-gray-300">
+                  مسافر {{ toPersianDigits(String(pIndex + 1)) }}
+                  <span class="text-xs text-gray-400 font-normal">({{ getPassengerLabel(passenger.gender) }})</span>
+                </h5>
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  @click="openSelectModal(pIndex)"
+                  class="px-3 py-1 rounded-lg bg-teal-50 dark:bg-teal-900/40 text-primary border border-teal-200 dark:border-teal-700 hover:bg-teal-100 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
                 >
-                <span :class="passenger.isForeign ? 'text-amber-600 font-bold' : 'text-gray-400'">اتباع</span>
-              </label>
-            </h5>
+                  <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zM15 7a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
+                  <span>انتخاب از مسافران سابق</span>
+                </button>
+                <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    v-model="passenger.isForeign"
+                    class="w-3.5 h-3.5 text-primary rounded border-gray-300 focus:ring-primary"
+                  >
+                  <span :class="passenger.isForeign ? 'text-amber-600 font-bold' : 'text-gray-400'">اتباع</span>
+                </label>
+              </div>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
@@ -183,7 +211,7 @@
                 >
               </div>
               <!-- Iranian: national code -->
-              <div v-if="!passenger.isForeign" class="md:col-span-2">
+              <div v-if="!passenger.isForeign">
                 <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                   کد ملی
                 </label>
@@ -192,7 +220,7 @@
                   type="text"
                   required
                   maxlength="10"
-                  class="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ltr text-left"
+                  class="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ltr text-left font-mono font-bold"
                   :class="passenger.nationalCode && !isValidNationalCode(passenger.nationalCode) ? 'border-red-400 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'"
                   placeholder="۱۰ رقم"
                   dir="ltr"
@@ -202,7 +230,7 @@
                 </p>
               </div>
               <!-- Foreign: passport number -->
-              <div v-else class="md:col-span-2">
+              <div v-else>
                 <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                   شماره پاسپورت
                 </label>
@@ -210,8 +238,35 @@
                   v-model="passenger.passportNumber"
                   type="text"
                   required
-                  class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono font-bold"
                   placeholder="شماره پاسپورت"
+                  dir="ltr"
+                >
+              </div>
+              <!-- Birth Date Input -->
+              <div class="md:col-span-2">
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ passenger.isForeign ? 'تاریخ تولد میلادی (YYYY/MM/DD)' : 'تاریخ تولد شمسی (بعد از ۱۳۰۰)' }}
+                  </label>
+                  <span
+                    v-if="getFormAgeCategory(passenger.birthDate, passenger.isForeign)"
+                    :class="[
+                      'text-xs font-bold px-2.5 py-0.5 rounded-full border',
+                      getFormAgeCategory(passenger.birthDate, passenger.isForeign)?.label === 'کودک'
+                        ? 'bg-sky-50 text-sky-700 border-sky-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    ]"
+                  >
+                    {{ getFormAgeCategory(passenger.birthDate, passenger.isForeign)?.label }}
+                  </span>
+                </div>
+                <input 
+                  v-model="passenger.birthDate"
+                  @input="onFormBirthDateInput($event, passenger)"
+                  type="text"
+                  class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-left ltr"
+                  :placeholder="passenger.isForeign ? '1995/08/25' : '1372/06/15'"
                   dir="ltr"
                 >
               </div>
@@ -380,6 +435,14 @@
       </div>
     </Transition>
 
+    <PassengerSelectModal
+      :is-open="selectModalOpen"
+      :target-index="activeTargetIndex"
+      :already-selected-national-ids="alreadySelectedNationalIds"
+      @close="selectModalOpen = false"
+      @select="onPassengerSelected"
+    />
+
     <Toast :show="toast.show" :type="toast.type" :message="toast.message" @hide="toast.show = false" />
   </div>
 </template>
@@ -387,12 +450,20 @@
 <script setup lang="ts">
 import { ArrowRightIcon, ArrowLeftIcon } from '@heroicons/vue/24/solid'
 import { usePersianNumber } from '~/composables/utils/usePersianNumber'
+import {
+  getPassengerAgeCategory,
+  maskShamsiDate,
+  maskMiladiDate,
+  shamsiToGregorian,
+  gregorianToShamsi
+} from '~/composables/utils/usePassengerAge'
 import { useSearch, type PricingResult, type PricingItem } from '~/stores/search'
 import { useProfile } from '~/composables/api/useProfile'
 import { useWallet } from '~/composables/api/useWallet'
 import { useOrders } from '~/composables/api/useOrders'
 import { useToast } from '~/composables/useToast'
 import Toast from '~/components/ui/Toast.vue'
+import PassengerSelectModal from '~/components/ui/PassengerSelectModal.vue'
 
 const { formatPrice, toPersianDigits } = usePersianNumber()
 const searchStore = useSearch()
@@ -414,6 +485,63 @@ const termsModalOpen = ref(false)
 // v2.6.0: scattered booking + allow partial options
 const scatteredBooking = ref(false)
 const allowPartial = ref(false)
+
+// Modal for selecting saved passengers
+const selectModalOpen = ref(false)
+const activeTargetIndex = ref(0)
+
+const openSelectModal = (index: number) => {
+  activeTargetIndex.value = index
+  selectModalOpen.value = true
+}
+
+const alreadySelectedNationalIds = computed(() => {
+  return passengerForms.value
+    .map(p => p.isForeign ? p.passportNumber : p.nationalCode)
+    .filter(Boolean)
+})
+
+const getFormAgeCategory = (birthDateStr: string, isForeign = false) => {
+  return getPassengerAgeCategory(birthDateStr, isForeign)
+}
+
+const onFormBirthDateInput = (e: Event, passenger: PassengerForm) => {
+  const input = e.target as HTMLInputElement
+  if (passenger.isForeign) {
+    passenger.birthDate = maskMiladiDate(input.value)
+  } else {
+    passenger.birthDate = maskShamsiDate(input.value)
+  }
+}
+
+const onPassengerSelected = (p: any) => {
+  const form = passengerForms.value[activeTargetIndex.value]
+  if (!form) return
+  form.firstName = p.firstName || ''
+  form.lastName = p.lastName || ''
+  form.isForeign = !!p.isForeign
+  if (p.isForeign) {
+    form.passportNumber = p.nationalId || ''
+    form.nationalCode = ''
+    if (p.birthDate) {
+      form.birthDate = p.birthDate.slice(0, 10).replace(/-/g, '/')
+    }
+  } else {
+    form.nationalCode = p.nationalId || ''
+    form.passportNumber = ''
+    if (p.birthDate) {
+      form.birthDate = gregorianToShamsi(p.birthDate)
+    }
+  }
+  if (p.gender === 'FEMALE') {
+    if (['adult_male', 'adult_female'].includes(form.gender)) form.gender = 'adult_female'
+    else if (['boy', 'girl'].includes(form.gender)) form.gender = 'girl'
+  } else if (p.gender === 'MALE') {
+    if (['adult_male', 'adult_female'].includes(form.gender)) form.gender = 'adult_male'
+    else if (['boy', 'girl'].includes(form.gender)) form.gender = 'boy'
+  }
+  showToast('success', `اطلاعات ${p.firstName} ${p.lastName} جایگذاری شد`)
+}
 
 // v2.6.0: compute coupe gender rules from passenger composition
 const coupeRules = computed(() => {
@@ -907,15 +1035,21 @@ const handleBook = async () => {
 
     // 3) v2.8.0: passengers are upserted automatically by the backend via newPassengers
     //    (insert-or-update by nationalId, isolated per user's api-key)
-    const newPassengers = passengerForms.value.map((p, idx) => ({
-      position: idx + 1,
-      firstName: p.firstName,
-      lastName: p.lastName,
-      nationalId: p.isForeign ? p.passportNumber || p.nationalCode : p.nationalCode,
-      gender: (p.gender === 'adult_male' || p.gender === 'boy') ? 'MALE' : 'FEMALE',
-      birthDate: p.birthDate || undefined,
-      isForeign: p.isForeign
-    }))
+    const newPassengers = passengerForms.value.map((p, idx) => {
+      let finalBirthDate: string | undefined = undefined
+      if (p.birthDate) {
+        finalBirthDate = p.isForeign ? p.birthDate.replace(/\//g, '-') : shamsiToGregorian(p.birthDate)
+      }
+      return {
+        position: idx + 1,
+        firstName: p.firstName,
+        lastName: p.lastName,
+        nationalId: p.isForeign ? p.passportNumber || p.nationalCode : p.nationalCode,
+        gender: (p.gender === 'adult_male' || p.gender === 'boy') ? 'MALE' : 'FEMALE',
+        birthDate: finalBirthDate,
+        isForeign: p.isForeign
+      }
+    })
 
     // 4) Build booking request (v2.6.0/v2.8.0 structure)
     const firstTrain = selectedTrains.value[0]

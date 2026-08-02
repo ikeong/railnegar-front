@@ -63,12 +63,25 @@
                 {{ (p.firstName || '؟')[0] }}
               </div>
               <div class="min-w-0">
-                <div class="font-bold text-gray-900">{{ p.firstName }} {{ p.lastName }}</div>
+                <div class="font-bold text-gray-900 flex items-center gap-2">
+                  <span>{{ p.firstName }} {{ p.lastName }}</span>
+                  <span
+                    v-if="getAgeCategory(p.birthDate, p.isForeign)"
+                    :class="[
+                      'text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                      getAgeCategory(p.birthDate, p.isForeign)?.label === 'کودک'
+                        ? 'bg-sky-50 text-sky-700 border-sky-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    ]"
+                  >
+                    {{ getAgeCategory(p.birthDate, p.isForeign)?.label }}
+                  </span>
+                </div>
                 <div class="text-xs text-gray-500 mt-1 flex items-center gap-2 flex-wrap">
-                  <span v-if="p.nationalId" class="font-mono" dir="ltr">{{ toPersianDigits(p.nationalId) }}</span>
+                  <span v-if="p.nationalId" class="font-mono font-bold" dir="ltr">{{ p.isForeign ? p.nationalId : toPersianDigits(p.nationalId) }}</span>
                   <span v-if="p.isForeign" class="bg-amber-50 text-amber-600 border border-amber-200 rounded-full px-2 py-0.5">اتباع</span>
                   <span class="bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">{{ p.gender === 'MALE' ? 'مرد' : 'زن' }}</span>
-                  <span v-if="p.birthDate" class="text-gray-400">{{ formatShamsiDate(p.birthDate) }}</span>
+                  <span v-if="p.birthDate" class="text-gray-400">{{ p.isForeign ? p.birthDate.slice(0, 10) : formatShamsiDate(p.birthDate) }}</span>
                 </div>
               </div>
             </div>
@@ -123,9 +136,30 @@
                   class="w-full p-3 border border-gray-200 rounded-xl text-sm text-left focus:ring-2 focus:ring-primary/20 focus:border-primary">
               </div>
               <div>
-                <label class="block text-xs text-gray-600 mb-1.5">تاریخ تولد</label>
-                <input v-model="editForm.birthDate" type="text" placeholder="۱۳۷۲/۰۶/۱۵" dir="ltr"
-                  class="w-full p-3 border border-gray-200 rounded-xl text-sm text-left focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="block text-xs text-gray-600">
+                    {{ editForm.isForeign ? 'تاریخ تولد میلادی (YYYY/MM/DD)' : 'تاریخ تولد شمسی (بعد از ۱۳۰۰)' }}
+                  </label>
+                  <span
+                    v-if="getAgeCategory(editForm.birthDate, editForm.isForeign)"
+                    :class="[
+                      'text-[10px] font-bold px-2 py-0.2 rounded-full border',
+                      getAgeCategory(editForm.birthDate, editForm.isForeign)?.label === 'کودک'
+                        ? 'bg-sky-50 text-sky-700 border-sky-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    ]"
+                  >
+                    {{ getAgeCategory(editForm.birthDate, editForm.isForeign)?.label }}
+                  </span>
+                </div>
+                <input
+                  v-model="editForm.birthDate"
+                  @input="onBirthDateInput"
+                  type="text"
+                  :placeholder="editForm.isForeign ? '1995/08/25' : '1372/06/15'"
+                  dir="ltr"
+                  class="w-full p-3 border border-gray-200 rounded-xl text-sm text-left focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                >
               </div>
             </div>
 
@@ -171,12 +205,32 @@
 <script setup lang="ts">
 import { usePassengers } from '~/composables/api/usePassengers'
 import { usePersianNumber } from '~/composables/utils/usePersianNumber'
+import {
+  getPassengerAgeCategory,
+  maskShamsiDate,
+  maskMiladiDate,
+  shamsiToGregorian,
+  gregorianToShamsi
+} from '~/composables/utils/usePassengerAge'
 import { useToast } from '~/composables/useToast'
 import Toast from '~/components/ui/Toast.vue'
 
 const { formatPrice, toPersianDigits } = usePersianNumber()
 const { listPassengers, savePassenger, updatePassenger, deletePassenger } = usePassengers()
 const { toast: toastState, showToast } = useToast()
+
+const getAgeCategory = (birthDateStr: string, isForeign = false) => {
+  return getPassengerAgeCategory(birthDateStr, isForeign)
+}
+
+const onBirthDateInput = (e: Event) => {
+  const input = e.target as HTMLInputElement
+  if (editForm.isForeign) {
+    editForm.birthDate = maskMiladiDate(input.value)
+  } else {
+    editForm.birthDate = maskShamsiDate(input.value)
+  }
+}
 
 const toast = reactive({
   show: false,
@@ -243,10 +297,18 @@ const openEdit = (p: any | null) => {
     editForm.firstName = p.firstName || ''
     editForm.lastName = p.lastName || ''
     editForm.nationalId = p.nationalId || ''
-    editForm.birthDate = p.birthDate ? p.birthDate.slice(0, 10) : ''
+    editForm.isForeign = !!p.isForeign
+    if (p.birthDate) {
+      if (p.isForeign) {
+        editForm.birthDate = p.birthDate.slice(0, 10).replace(/-/g, '/')
+      } else {
+        editForm.birthDate = gregorianToShamsi(p.birthDate)
+      }
+    } else {
+      editForm.birthDate = ''
+    }
     editForm.gender = p.gender === 'FEMALE' ? 'FEMALE' : 'MALE'
     editForm.phone = p.phone || ''
-    editForm.isForeign = !!p.isForeign
   } else {
     editMode.value = 'create'
     editingId.value = null
@@ -265,12 +327,21 @@ const submitEdit = async () => {
   if (!editForm.firstName || !editForm.lastName || !editForm.nationalId) return
   saving.value = true
   try {
+    let finalBirthDate: string | undefined = undefined
+    if (editForm.birthDate) {
+      if (editForm.isForeign) {
+        finalBirthDate = editForm.birthDate.replace(/\//g, '-')
+      } else {
+        finalBirthDate = shamsiToGregorian(editForm.birthDate)
+      }
+    }
+
     const payload = {
       firstName: editForm.firstName,
       lastName: editForm.lastName,
       nationalId: editForm.nationalId,
       gender: editForm.gender,
-      birthDate: editForm.birthDate || undefined,
+      birthDate: finalBirthDate,
       phone: editForm.phone || undefined,
       isForeign: editForm.isForeign,
       resolution: 'replace' as const
