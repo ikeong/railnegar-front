@@ -13,12 +13,11 @@
         </div>
         <NuxtLink
           to="/profile/support"
-          class="px-3.5 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:text-primary text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs"
+          class="px-3.5 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:text-primary text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-sm"
         >
           <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 0a9 9 0 1012.728 0M12 3v9m0 0l-3.536-3.536"/></svg>
           <span>تیکتهای پشتیبانی</span>
         </NuxtLink>
-      </div>
       </div>
 
       <!-- Status Tabs -->
@@ -94,7 +93,7 @@
                 :key="sub.uuid || sub.id"
                 class="bg-gray-50 rounded-xl p-3 text-xs"
               >
-                <div class="flex items-center gap-2 text-gray-600">
+                <div class="flex items-center gap-2 text-gray-600 flex-wrap">
                   <span>{{ getStationName(sub.fromStationId) }}</span>
                   <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                   <span>{{ getStationName(sub.toStationId) }}</span>
@@ -106,12 +105,12 @@
             </div>
 
             <!-- Price + Actions -->
-            <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-gray-100">
               <div>
                 <span class="text-xs text-gray-500">قابل پرداخت: </span>
                 <span class="font-bold text-primary">{{ formatPrice(order.totalPrice || order.totalAmount || 0) }} تومان</span>
               </div>
-              <div class="flex gap-2 flex-wrap items-center">
+              <div class="flex items-center gap-2 flex-wrap sm:justify-end">
                 <button
                   @click="openTicketModalForOrder(order)"
                   class="text-xs text-primary hover:text-teal-700 font-bold transition px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-200 flex items-center gap-1"
@@ -214,6 +213,7 @@
           </button>
         </div>
       </div>
+    </div>
 
     <!-- Cancel Confirmation Modal -->
     <div v-if="cancelTarget" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" @click.self="cancelTarget = null">
