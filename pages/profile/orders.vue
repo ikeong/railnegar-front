@@ -110,16 +110,16 @@
             <!-- Price + Actions -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-gray-100">
               <div>
-                <template v-if="getOrderTotalAmount(order) > 0">
+                <span v-if="getOrderTotalAmount(order) > 0">
                   <span class="text-xs text-gray-500">مبلغ: </span>
                   <span class="font-bold text-primary">{{ formatPrice(getOrderTotalAmount(order)) }} تومان</span>
-                </template>
-                <template v-else>
+                </span>
+                <span v-else>
                   <span class="text-xs text-gray-500">مبلغ: </span>
                   <span class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
                     پس از پیدا شدن قطار
                   </span>
-                </template>
+                </span>
               </div>
               <div class="flex items-center gap-2 flex-wrap sm:justify-end">
                 <button
@@ -200,6 +200,41 @@
                 </div>
               </div>
             </div>
+
+            <!-- Financial Breakdown & Wallet Details -->
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2.5 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span>جزئیات مالی و وضعیت کیف پول</span>
+              </div>
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3.5 space-y-2 text-xs">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-500">قیمت بلیط قطار:</span>
+                  <span class="font-bold text-gray-900 dark:text-gray-100">
+                    {{ getTicketTotal(order) > 0 ? `${formatPrice(getTicketTotal(order))} تومان` : 'پس از پیدا شدن قطار' }}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-500">هزینه خدمات ریلنگار:</span>
+                  <span class="font-bold text-gray-900 dark:text-gray-100">
+                    {{ formatPrice(getServiceFee(order)) }} تومان
+                  </span>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-gray-100 dark:border-gray-700 font-bold text-sm">
+                  <span class="text-gray-700 dark:text-gray-300">مجموع پرداختی:</span>
+                  <span class="text-primary">
+                    {{ getOrderTotalAmount(order) > 0 ? `${formatPrice(getOrderTotalAmount(order))} تومان` : `${formatPrice(getServiceFee(order))} تومان + قیمت بلیط` }}
+                  </span>
+                </div>
+                <div class="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between flex-wrap gap-2">
+                  <span class="text-gray-500">وضعیت در کیف پول:</span>
+                  <span :class="['px-2.5 py-0.5 rounded-full text-[11px] font-bold border', getWalletLockBadge(order.status).style]">
+                    {{ getWalletLockBadge(order.status).text }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
           </div>
         </div>
 
@@ -352,7 +387,6 @@
     </div>
 
     <Toast :show="toast.show" :type="toast.type" :message="toast.message" @hide="toast.show = false" />
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -648,31 +682,68 @@ const handleCancel = async () => {
   }
 }
 
-const getOrderTotalAmount = (order: any): number => {
+const getServiceFee = (order: any): number => {
   if (!order) return 0
-  const direct = order.totalPrice || order.totalAmount || order.totalCost || order.price || order.cost
+  const direct = order.serviceTotal || order.serviceFee || order.totalServiceFee
   if (direct && Number(direct) > 0) return Number(direct)
 
-  // Sum of matchedPriceRial or matchedTrainData in subRequests
+  const pax = order.passengers?.length || order.adultsCount || 1
+  const originCount = order.origins?.length || order.subRequests?.length || 1
+  const baseFee = 19000
+  const extraRouteFee = originCount > 1 ? (originCount - 1) * 6000 : 0
+  return (baseFee + extraRouteFee) * pax
+}
+
+const getTicketTotal = (order: any): number => {
+  if (!order) return 0
+  const direct = order.ticketTotal || order.ticketPrice || order.totalTicketPrice
+  if (direct && Number(direct) > 0) return Number(direct)
+
   if (Array.isArray(order.subRequests) && order.subRequests.length > 0) {
     const matchedSumRial = order.subRequests.reduce((acc: number, sub: any) => {
       const rial = sub.matchedPriceRial || sub.matchedTrainData?.Cost || sub.matchedTrainData?.FullPrice || sub.priceRial || sub.costRial || 0
       return acc + Number(rial)
     }, 0)
     if (matchedSumRial > 0) {
-      return Math.round(matchedSumRial / 10) // Convert Rial -> Toman
+      return Math.round(matchedSumRial / 10)
     }
   }
+  return 0
+}
+
+const getWalletLockBadge = (status: string) => {
+  if (['COMPLETED', 'TICKETED', 'PAID'].includes(status)) {
+    return {
+      text: '✓ بلیط صادر شد — مبلغ از کیف پول برداشت شد',
+      style: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    }
+  }
+  if (['CANCELLED', 'EXPIRED', 'FAILED'].includes(status)) {
+    return {
+      text: '🔓 مبلغ بلوکهشده آزاد و به کیف پول عودت داده شد',
+      style: 'bg-gray-100 text-gray-700 border-gray-200'
+    }
+  }
+  return {
+    text: '🔒 مبلغ در کیف پول بلوکه است (تا زمان صدور یا لغو)',
+    style: 'bg-blue-50 text-blue-700 border-blue-200'
+  }
+}
+
+const getOrderTotalAmount = (order: any): number => {
+  if (!order) return 0
+  const direct = order.totalPrice || order.totalAmount || order.totalCost || order.price || order.cost
+  if (direct && Number(direct) > 0) return Number(direct)
+
+  const ticket = getTicketTotal(order)
+  const service = getServiceFee(order)
+  if (ticket > 0) return ticket + service
 
   if (order.metadata?.pricing?.total) return Number(order.metadata.pricing.total)
   if (order.metadata?.total) return Number(order.metadata.total)
   if (order.pricing?.total) return Number(order.pricing.total)
 
-  const service = Number(order.serviceTotal || order.serviceFee || 0)
-  const ticket = Number(order.ticketTotal || order.ticketPrice || 0)
-  if (service + ticket > 0) return service + ticket
-
-  return 0
+  return service
 }
 
 const formatDate = (dateStr: string): string => {
