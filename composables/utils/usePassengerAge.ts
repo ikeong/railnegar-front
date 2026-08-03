@@ -12,7 +12,13 @@ export function shamsiToGregorian(shamsiStr: string): string {
   const jm = parseInt(clean.slice(4, 6), 10)
   const jd = parseInt(clean.slice(6, 8), 10)
 
-  if (jy < 1300 || jm < 1 || jm > 12 || jd < 1 || jd > 31) return shamsiStr
+  if (jy >= 1900) {
+    const mStr = String(jm).padStart(2, '0')
+    const dStr = String(jd).padStart(2, '0')
+    return `${jy}-${mStr}-${dStr}`
+  }
+
+  if (jy < 1200 || jm < 1 || jm > 12 || jd < 1 || jd > 31) return shamsiStr
 
   let gy = (jy <= 979) ? 621 : 1600
   let jyTemp = jy - ((jy <= 979) ? 0 : 979)

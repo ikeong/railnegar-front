@@ -505,6 +505,7 @@ import Toast from '~/components/ui/Toast.vue'
 import PassengerSelectModal from '~/components/ui/PassengerSelectModal.vue'
 
 const { formatPrice, toPersianDigits } = usePersianNumber()
+const route = useRoute()
 const searchStore = useSearch()
 const { getProfile, isAgencyTier } = useProfile()
 const { getBalance } = useWallet()
@@ -758,7 +759,6 @@ const defaultBirthDate = (): string => {
 }
 
 onMounted(async () => {
-  const route = useRoute()
   const { getSession, touchSession, deleteSession } = useBookingSession()
   const sessionUuid = route.params.uuid as string | undefined
 
