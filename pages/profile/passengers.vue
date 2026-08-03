@@ -448,13 +448,16 @@ const submitEdit = async () => {
   if (!editForm.firstName || !editForm.lastName || !editForm.nationalId) return
   saving.value = true
   try {
-    let finalBirthDate: string | undefined = undefined
+    let finalBirthDate: string
     if (editForm.isChild) {
+      updateModalChildBirthDate()
       if (editForm.birthDate) {
         finalBirthDate = editForm.isForeign ? editForm.birthDate.replace(/\//g, '-') : shamsiToGregorian(editForm.birthDate)
+      } else {
+        const defShamsi = '1400/01/01'
+        finalBirthDate = editForm.isForeign ? '2021-01-01' : shamsiToGregorian(defShamsi)
       }
     } else {
-      // Adult → default 30 years ago
       finalBirthDate = defaultAdultBirthDateISO()
     }
 

@@ -1155,9 +1155,15 @@ const handleBook = async () => {
     // 3) v2.8.0: passengers are upserted automatically by the backend via newPassengers
     //    (insert-or-update by nationalId, isolated per user's api-key)
     const newPassengers = passengerForms.value.map((p, idx) => {
-      let finalBirthDate: string | undefined = undefined
-      if (p.birthDate) {
-        finalBirthDate = p.isForeign ? p.birthDate.replace(/\//g, '-') : shamsiToGregorian(p.birthDate)
+      let finalBirthDate: string
+      if (isChildGender(p.gender)) {
+        const y = p.birthYear || (p.isForeign ? 2021 : 1400)
+        const m = p.birthMonth || 1
+        const d = p.birthDay || 1
+        const bStr = `${y}/${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}`
+        finalBirthDate = p.isForeign ? bStr.replace(/\//g, '-') : shamsiToGregorian(bStr)
+      } else {
+        finalBirthDate = defaultBirthDate()
       }
       return {
         position: idx + 1,
