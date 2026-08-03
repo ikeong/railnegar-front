@@ -510,8 +510,16 @@ const isPrivateMode = computed(() => {
   return searchParams.value?.compartmentType === 'private' || route.query.ct === 'private'
 })
 
+const getCityName = (id: number | string): string => {
+  if (!id) return ''
+  const searchStore = useSearch()
+  const city = searchStore.cities.find((c: any) => c.id === Number(id))
+  return city ? city.name : ''
+}
+
 onMounted(async () => {
   const searchStore = useSearch()
+  await searchStore.fetchStations()
   const storeParams = searchStore.searchParams.value
   searchParams.value = storeParams
 
@@ -607,16 +615,6 @@ onMounted(async () => {
     loading.value = false
   }
 })
-
-const getCityName = (id: number): string => {
-  const cityMap: Record<number, string> = {
-    1: 'تهران', 191: 'مشهد', 5: 'اصفهان', 9: 'قم', 8: 'تبریز',
-    17: 'کرمان', 14: 'یزد', 27: 'بندر عباس', 13: 'اهواز', 15: 'شیراز',
-    11: 'رشت', 21: 'ساری', 28: 'همدان', 23: 'اراک', 10: 'ارومیه',
-    6: 'قزوین', 16: 'ملایر'
-  }
-  return cityMap[id] || 'تهران'
-}
 
 const getStationCode = (name: string): number => {
   const stationMap: Record<string, number> = {

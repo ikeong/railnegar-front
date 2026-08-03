@@ -6,25 +6,24 @@ export interface City {
   isHub?: boolean
 }
 
-// Static fallback stations
 export const defaultCities: City[] = [
   { id: 1, name: 'تهران', isHub: true },
   { id: 191, name: 'مشهد', isHub: true },
-  { id: 5, name: 'اصفهان', isHub: true },
-  { id: 9, name: 'قم', isHub: true },
-  { id: 8, name: 'تبریز', isHub: true },
-  { id: 17, name: 'کرمان', isHub: true },
-  { id: 14, name: 'یزد', isHub: true },
-  { id: 27, name: 'بندر عباس', isHub: true },
-  { id: 13, name: 'اهواز', isHub: true },
-  { id: 15, name: 'شیراز', isHub: true },
-  { id: 11, name: 'رشت' },
-  { id: 21, name: 'ساری' },
-  { id: 28, name: 'همدان' },
-  { id: 23, name: 'اراک' },
-  { id: 10, name: 'ارومیه' },
-  { id: 6, name: 'قزوین' },
-  { id: 16, name: 'ملایر' }
+  { id: 21, name: 'اصفهان', isHub: true },
+  { id: 161, name: 'قم', isHub: true },
+  { id: 55, name: 'تبریز', isHub: true },
+  { id: 167, name: 'کرمان', isHub: true },
+  { id: 219, name: 'یزد', isHub: true },
+  { id: 37, name: 'بندر عباس', isHub: true },
+  { id: 25, name: 'اهواز', isHub: true },
+  { id: 255, name: 'شیراز', isHub: true },
+  { id: 451, name: 'رشت' },
+  { id: 100, name: 'ساری' },
+  { id: 117, name: 'همدان' },
+  { id: 14, name: 'اراک' },
+  { id: 448, name: 'ارومیه' },
+  { id: 160, name: 'قزوین' },
+  { id: 15, name: 'ملایر' }
 ]
 
 export const cities: City[] = [...defaultCities]

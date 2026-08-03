@@ -108,7 +108,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-gray-100">
               <div>
                 <span class="text-xs text-gray-500">قابل پرداخت: </span>
-                <span class="font-bold text-primary">{{ formatPrice(order.totalPrice || order.totalAmount || 0) }} تومان</span>
+                <span class="font-bold text-primary">{{ formatPrice(getOrderTotalAmount(order)) }} تومان</span>
               </div>
               <div class="flex items-center gap-2 flex-wrap sm:justify-end">
                 <button
@@ -637,16 +637,43 @@ const handleCancel = async () => {
   }
 }
 
+const getOrderTotalAmount = (order: any): number => {
+  if (!order) return 0
+  const direct = order.totalPrice || order.totalAmount || order.totalCost || order.price || order.cost
+  if (direct && Number(direct) > 0) return Number(direct)
+
+  if (order.metadata?.pricing?.total) return Number(order.metadata.pricing.total)
+  if (order.metadata?.total) return Number(order.metadata.total)
+  if (order.pricing?.total) return Number(order.pricing.total)
+
+  if (Array.isArray(order.subRequests) && order.subRequests.length > 0) {
+    const subSum = order.subRequests.reduce((acc: number, sub: any) => {
+      const subCost = sub.totalPrice || sub.totalAmount || sub.totalCost || sub.price || sub.cost || 0
+      return acc + Number(subCost)
+    }, 0)
+    if (subSum > 0) return subSum
+  }
+
+  const service = Number(order.serviceTotal || order.serviceFee || 0)
+  const ticket = Number(order.ticketTotal || order.ticketPrice || 0)
+  if (service + ticket > 0) return service + ticket
+
+  return 0
+}
+
 const formatDate = (dateStr: string): string => {
   if (!dateStr) return '-'
   try {
     const d = new Date(dateStr)
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
+    if (isNaN(d.getTime())) return dateStr
     const h = String(d.getHours()).padStart(2, '0')
     const min = String(d.getMinutes()).padStart(2, '0')
-    return toPersianDigits(`${y}/${m}/${day} ${h}:${min}`)
+    const shamsi = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(d)
+    return toPersianDigits(`${shamsi} ${h}:${min}`)
   } catch {
     return dateStr
   }
