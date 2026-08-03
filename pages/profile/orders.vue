@@ -99,7 +99,10 @@
                   <span>{{ getStationName(sub.toStationId) }}</span>
                   <span class="text-gray-300 mx-1">|</span>
                   <span>{{ toShamsiDate(sub.travelDate) }}</span>
-                  <span :class="['mr-auto', getStatusStyle(sub.status)]">{{ getStatusLabel(sub.status) }}</span>
+                  <span v-if="sub.matchedPriceRial" class="font-bold text-primary mr-auto">
+                    {{ formatPrice(Math.round(Number(sub.matchedPriceRial) / 10)) }} تومان
+                  </span>
+                  <span :class="[sub.matchedPriceRial ? '' : 'mr-auto', getStatusStyle(sub.status)]">{{ getStatusLabel(sub.status) }}</span>
                 </div>
               </div>
             </div>
@@ -107,8 +110,16 @@
             <!-- Price + Actions -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-gray-100">
               <div>
-                <span class="text-xs text-gray-500">قابل پرداخت: </span>
-                <span class="font-bold text-primary">{{ formatPrice(getOrderTotalAmount(order)) }} تومان</span>
+                <template v-if="getOrderTotalAmount(order) > 0">
+                  <span class="text-xs text-gray-500">مبلغ: </span>
+                  <span class="font-bold text-primary">{{ formatPrice(getOrderTotalAmount(order)) }} تومان</span>
+                </template>
+                <template v-else>
+                  <span class="text-xs text-gray-500">مبلغ: </span>
+                  <span class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
+                    پس از پیدا شدن قطار
+                  </span>
+                </template>
               </div>
               <div class="flex items-center gap-2 flex-wrap sm:justify-end">
                 <button
@@ -642,17 +653,20 @@ const getOrderTotalAmount = (order: any): number => {
   const direct = order.totalPrice || order.totalAmount || order.totalCost || order.price || order.cost
   if (direct && Number(direct) > 0) return Number(direct)
 
+  // Sum of matchedPriceRial or matchedTrainData in subRequests
+  if (Array.isArray(order.subRequests) && order.subRequests.length > 0) {
+    const matchedSumRial = order.subRequests.reduce((acc: number, sub: any) => {
+      const rial = sub.matchedPriceRial || sub.matchedTrainData?.Cost || sub.matchedTrainData?.FullPrice || sub.priceRial || sub.costRial || 0
+      return acc + Number(rial)
+    }, 0)
+    if (matchedSumRial > 0) {
+      return Math.round(matchedSumRial / 10) // Convert Rial -> Toman
+    }
+  }
+
   if (order.metadata?.pricing?.total) return Number(order.metadata.pricing.total)
   if (order.metadata?.total) return Number(order.metadata.total)
   if (order.pricing?.total) return Number(order.pricing.total)
-
-  if (Array.isArray(order.subRequests) && order.subRequests.length > 0) {
-    const subSum = order.subRequests.reduce((acc: number, sub: any) => {
-      const subCost = sub.totalPrice || sub.totalAmount || sub.totalCost || sub.price || sub.cost || 0
-      return acc + Number(subCost)
-    }, 0)
-    if (subSum > 0) return subSum
-  }
 
   const service = Number(order.serviceTotal || order.serviceFee || 0)
   const ticket = Number(order.ticketTotal || order.ticketPrice || 0)
