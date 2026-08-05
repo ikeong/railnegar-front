@@ -773,7 +773,12 @@ const isValidNationalCode = (code: string): boolean => {
 const defaultBirthDate = (): string => {
   const d = new Date()
   d.setFullYear(d.getFullYear() - 30)
-  return d.toISOString().split('T')[0]
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tehran',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(d)
 }
 
 onMounted(async () => {

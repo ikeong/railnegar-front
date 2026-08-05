@@ -751,6 +751,7 @@
 <script setup lang="ts">
 import { ExclamationTriangleIcon, MapPinIcon } from '@heroicons/vue/24/solid'
 import { usePersianNumber } from '~/composables/utils/usePersianNumber'
+import { getTehranTodayDateStr } from '~/composables/utils/usePassengerAge'
 import CustomDatePicker from '~/components/ui/CustomDatePicker.vue'
 import { useSearch, cities, type City } from '~/stores/search'
 
@@ -765,7 +766,7 @@ const searchParams = ref({
   destinations: [] as number[],
   originsMode: 'single' as 'single' | 'multiple',
   destinationMode: 'single' as 'single' | 'multiple',
-  date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+  date: getTehranTodayDateStr(1),
   passengers: {
     men: 0,
     women: 0,

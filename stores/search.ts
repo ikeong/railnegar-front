@@ -36,6 +36,8 @@ export interface PassengerDetails {
   infants: number
 }
 
+import { getTehranTodayDateStr } from '~/composables/utils/usePassengerAge'
+
 export interface SearchRoute {
   from: number
   to: number
@@ -279,7 +281,7 @@ export const useSearch = () => {
       origins: [],
       destination: 0,
       destinations: [],
-      date: new Date().toISOString().split('T')[0] ?? '',
+      date: getTehranTodayDateStr(0),
       passengers: 1,
       selectedTrainIds: [],
       compartmentType: 'regular',

@@ -156,3 +156,37 @@ export function getPassengerAgeCategory(birthDateStr: string, isForeign = false)
     age
   }
 }
+
+export function getTehranTodayDateStr(offsetDays = 0): string {
+  const d = new Date()
+  if (offsetDays !== 0) {
+    d.setDate(d.getDate() + offsetDays)
+  }
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tehran',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+  return formatter.format(d)
+}
+
+export function formatTehranDateTime(dateInput: string | Date | null | undefined): string {
+  if (!dateInput) return '-'
+  try {
+    const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
+    if (isNaN(d.getTime())) return String(dateInput)
+    const formatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+      timeZone: 'Asia/Tehran',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+    return formatter.format(d)
+  } catch {
+    return String(dateInput)
+  }
+}
