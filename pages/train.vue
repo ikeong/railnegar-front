@@ -23,12 +23,12 @@
           </button>
         </div>
 
-        <div v-if="searchMode === 'presale'" class="mb-6 space-y-3">
+        <div v-if="searchMode === 'presale'" class="mb-6 space-y-3" dir="rtl">
           <div class="bg-[#fff3eb] border-2 border-[#ffbe99] rounded-2xl p-4 sm:p-5 text-[#c84814] shadow-sm">
             <div class="flex items-start justify-between gap-4">
-              <div>
+              <div class="text-right">
                 <h2 class="font-bold text-base sm:text-lg text-right">
-                  {{ searchStore.activePresale.value?.title || 'رزرو پیشفروش خودکار بلیط قطار' }}
+                  {{ toPersianDigits(searchStore.activePresale.value?.title || 'رزرو پیشفروش خودکار بلیط قطار') }}
                 </h2>
                 <p v-if="searchStore.activePresale.value?.targetDates?.label" class="text-xs sm:text-sm text-[#d9531e] mt-1 font-bold">
                   بازه سفر: {{ toPersianDigits(searchStore.activePresale.value.targetDates.label) }}
@@ -44,9 +44,9 @@
             </div>
 
             <!-- Live Countdown Timer -->
-            <div v-if="countdownText" class="mt-3 bg-white/90 border border-[#ffbe99] rounded-xl p-2.5 text-center font-bold text-sm sm:text-base text-[#c84814] flex items-center justify-center gap-2 shadow-inner">
+            <div v-if="countdownText" class="mt-3 bg-white/90 border border-[#ffbe99] rounded-xl p-2.5 text-center font-bold text-sm sm:text-base text-[#c84814] flex flex-wrap items-center justify-center gap-2 shadow-inner" dir="rtl">
               <span>⏳ مانده تا شروع پیشفروش:</span>
-              <span class="font-heading" dir="ltr">{{ countdownText }}</span>
+              <span class="font-heading font-extrabold" dir="rtl">{{ countdownText }}</span>
             </div>
           </div>
         </div>
