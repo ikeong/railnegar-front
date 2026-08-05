@@ -435,7 +435,8 @@
                       :key="coach.id"
                       @click="togglePresaleCoach(coach.id)"
                       :disabled="isCoachDisabled(coach.id)"
-                      class="relative p-3 rounded-2xl border-2 transition-all flex items-center justify-between gap-2 text-right select-none"
+                      :title="isCoachDisabled(coach.id) ? 'ظرفیت این کوپه کمتر از تعداد مسافران شماست' : coach.description"
+                      class="group/item relative p-3 rounded-2xl border-2 transition-all flex items-center justify-between gap-2 text-right select-none"
                       :class="isCoachDisabled(coach.id)
                         ? 'opacity-40 cursor-not-allowed border-gray-200 bg-gray-100 dark:bg-gray-800 text-gray-400'
                         : presaleCoachTypes.includes(coach.id)
@@ -454,12 +455,25 @@
                         <span class="text-xs sm:text-sm font-bold truncate">{{ coach.label }}</span>
                       </div>
 
-                      <span
-                        v-if="isCoachDisabled(coach.id)"
-                        class="text-[9px] font-bold text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 px-1.5 py-0.5 rounded-full shrink-0"
-                      >
-                        ظرفیت کم
-                      </span>
+                      <div class="flex items-center gap-1 shrink-0">
+                        <!-- Info Icon with Tooltip Popup -->
+                        <div class="relative group/tooltip" @click.stop>
+                          <svg class="w-4 h-4 text-gray-400 hover:text-primary transition-colors cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div class="absolute bottom-full mb-2 right-1/2 translate-x-1/2 hidden group-hover/tooltip:block w-48 p-2.5 bg-gray-900 text-white text-[11px] font-medium rounded-xl shadow-xl z-30 text-center leading-relaxed pointer-events-none">
+                            {{ coach.description }}
+                            <div class="absolute top-full right-1/2 translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                          </div>
+                        </div>
+
+                        <span
+                          v-if="isCoachDisabled(coach.id)"
+                          class="text-[9px] font-bold text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 px-1.5 py-0.5 rounded-full"
+                        >
+                          ظرفیت کم
+                        </span>
+                      </div>
                     </button>
                   </div>
 
@@ -867,11 +881,11 @@ const searchParams = ref({
 const singleOrigin = ref<number | ''>(searchParams.value.originsMode === 'single' && searchParams.value.origins.length > 0 ? (searchParams.value.origins[0] ?? '') : '')
 
 const coachTypeOptions = [
-  { id: 1, label: "۴ تخته معمولی", capacity: 4 },
-  { id: 2, label: "۶ تخته", capacity: 6 },
-  { id: 3, label: "اتوبوسی", capacity: Infinity },
-  { id: 4, label: "پردیس (سریع)", capacity: Infinity },
-  { id: 5, label: "۵ ستاره", capacity: 4 }
+  { id: 1, label: "۴ تخته معمولی", capacity: 4, description: "کوپههای ۴ نفره با امکانات استاندارد سفر و قیمت مناسب" },
+  { id: 2, label: "۶ تخته", capacity: 6, description: "کوپههای ۶ نفره اقتصادی مناسب برای خانوادهها و گروهها" },
+  { id: 3, label: "اتوبوسی", capacity: Infinity, description: "سالنی بدون کوپه با صندلیهای اتوبوسی راحتی و قیمت مناسب" },
+  { id: 4, label: "پردیس (سریع)", capacity: Infinity, description: "قطارهای سریعالسیر پردیس خودکشش با زمان سفر کوتاهتر" },
+  { id: 5, label: "۵ ستاره", capacity: 4, description: "قطارهای لوکس ۵ ستاره (فدک، زندگی، نور) با خدمات و پذیرایی ویژه" }
 ]
 
 // Total passengers (excluding infants — they don't need a seat)
@@ -932,7 +946,7 @@ const coachWarningText = computed(() => {
 })
 
 const timeRangeOptions = [
-  { value: "00:00-24:00", labelTitle: "تمام ساعات", labelDesc: "شبانهروز" },
+  { value: "00:00-24:00", labelTitle: "تمام ساعات", labelDesc: "شبانه روز" },
   { value: "06:00-12:00", labelTitle: "صبح", labelDesc: "۰۶:۰۰ تا ۱۲:۰۰" },
   { value: "12:00-18:00", labelTitle: "بعدازظهر", labelDesc: "۱۲:۰۰ تا ۱۸:۰۰" },
   { value: "18:00-24:00", labelTitle: "شب", labelDesc: "۱۸:۰۰ تا ۲۴:۰۰" }
