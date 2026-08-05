@@ -1246,6 +1246,7 @@ const handleBook = async () => {
       })
     }
 
+    const maxSeatCostToman = Math.max(...selectedTrains.value.map((t: any) => Number(t.cost || t.price || 0)), 0)
     const bookingPayload = {
       priority: 5,
       isPresale: searchStore.searchParams.value.isPresale || false,
@@ -1266,7 +1267,13 @@ const handleBook = async () => {
           departureTimeStart: searchStore.searchParams.value.presaleFilters?.departureTimeStart,
           departureTimeEnd: searchStore.searchParams.value.presaleFilters?.departureTimeEnd,
           coachTypes: searchStore.searchParams.value.presaleFilters?.coachTypes,
-          scattered: scatteredBooking.value
+          scattered: scatteredBooking.value,
+          maxPrice: maxSeatCostToman > 0 ? maxSeatCostToman * 10 : (searchStore.searchParams.value.presaleFilters?.maxPrice || undefined)
+        },
+        pricing: {
+          estimatedTotalRial: Math.round(finalTotal.value * 10),
+          ticketTotalRial: Math.round(totalTicketPrice.value * 10),
+          serviceTotalRial: Math.round(totalServiceCharge.value * 10)
         }
       }
     }
