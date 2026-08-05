@@ -934,7 +934,8 @@ const fetchAllResults = async (dates: string[], routes: SearchRoute[]) => {
             })
           } catch (err: any) {
             // 400 error means no train found for this specific route/date combination
-            if (err?.response?.status === 400 || err?.status === 400) {
+            const status = err?.statusCode || err?.status || err?.response?.status || err?.data?.statusCode
+            if (status === 400 || String(err?.message || err).includes('400')) {
               return { combo, trains: [] }
             }
             throw err

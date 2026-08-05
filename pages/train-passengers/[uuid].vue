@@ -773,7 +773,6 @@ const defaultBirthDate = (): string => {
 }
 
 onMounted(async () => {
-  const { getSession, touchSession, deleteSession } = useBookingSession()
   const sessionUuid = route.params.uuid as string | undefined
 
   // v2.6.0: this page requires a booking session uuid — no uuid → 404

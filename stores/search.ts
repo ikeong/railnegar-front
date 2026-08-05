@@ -269,8 +269,7 @@ export const useSearch = () => {
       if (res?.ok && res?.data) {
         return res.data as TicketFareResult
       }
-    } catch (err) {
-      console.error('Failed to get ticket fare:', err)
+    } catch {
     }
     return null
   }
