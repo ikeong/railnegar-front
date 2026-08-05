@@ -428,7 +428,7 @@
                     </button>
                   </div>
 
-                  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <button
                       type="button"
                       v-for="coach in coachTypeOptions"
