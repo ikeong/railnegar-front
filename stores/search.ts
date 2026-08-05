@@ -276,6 +276,26 @@ export const useSearch = () => {
     return null
   }
 
+  const estimatePresalePrice = async (params: {
+    presaleId?: number
+    fromStationId?: number
+    toStationId?: number
+    fromStationName?: string
+    toStationName?: string
+    passengersCount: number
+  }) => {
+    try {
+      const res = await $fetch<any>('https://railapi.happyupload.com/api/v1/public/presales/estimate-price', {
+        method: 'POST',
+        body: params
+      })
+      if (res) return res
+    } catch (err) {
+      console.error('Failed to estimate presale price:', err)
+    }
+    return null
+  }
+
   const clearSearch = () => {
     searchParams.value = {
       origins: [],
@@ -310,6 +330,7 @@ export const useSearch = () => {
     fetchPricing,
     calculatePricing,
     ticketFare,
+    estimatePresalePrice,
     clearSearch
   }
 }

@@ -915,15 +915,44 @@ onMounted(async () => {
       // v2.5.0: per-seat train price (Toman) so backend can compute ticketTotal for exclusive coupe
       const seatCostToman = Math.max(...selectedTrains.value.map((t: any) => Number(t.cost || t.price || 0)))
 
-      const result = await searchStore.calculatePricing({
-        // v2.3.1: SPECIAL/ROYAL tiers = agency → agency fee discount applies
-        isAgency: isAgencyUser.value,
-        passengerCount: totalPassengers.value,
-        subRequests,
-        exclusiveCompartment: userWantsPrivate && hasExclusive && compCapacity > 0,
-        compartmentCapacity: compCapacity > 0 ? compCapacity : undefined,
-        ticketCostPerSeat: seatCostToman > 0 ? seatCostToman : undefined
-      })
+      let result: any = null
+
+      if (searchStore.searchParams.value.isPresale) {
+        const activePresale = searchStore.activePresale.value
+        const presaleEst = await searchStore.estimatePresalePrice({
+          presaleId: activePresale?.id,
+          fromStationId: subRequests[0]?.fromStationId,
+          toStationId: subRequests[0]?.toStationId,
+          passengersCount: totalPassengers.value
+        })
+        if (presaleEst?.recommendedEstimate) {
+          const rec = presaleEst.recommendedEstimate
+          const ticketToman = Math.round(Number(rec.ticketTotalRial || 0) / 10)
+          const serviceToman = Math.round(Number(rec.serviceTotalRial || 0) / 10)
+          const totalToman = Math.round(Number(rec.estimatedTotalRial || 0) / 10)
+          result = {
+            total: totalToman,
+            ticketTotal: ticketToman,
+            serviceTotal: serviceToman,
+            items: [
+              { label: `برآورد قیمت بلیط قطار پیشفروش (${totalPassengers.value} صندلی)`, amount: ticketToman },
+              { label: `کارمزد خدمات رزرو خودکار پیشفروش`, amount: serviceToman }
+            ]
+          }
+        }
+      }
+
+      if (!result) {
+        result = await searchStore.calculatePricing({
+          // v2.3.1: SPECIAL/ROYAL tiers = agency → agency fee discount applies
+          isAgency: isAgencyUser.value,
+          passengerCount: totalPassengers.value,
+          subRequests,
+          exclusiveCompartment: userWantsPrivate && hasExclusive && compCapacity > 0,
+          compartmentCapacity: compCapacity > 0 ? compCapacity : undefined,
+          ticketCostPerSeat: seatCostToman > 0 ? seatCostToman : undefined
+        })
+      }
       if (result) {
         // v2.6.1: backend multiplies ticketTotal by subRoutesCount (sum of routes),
         // but only ONE train (the priciest) is actually booked → recompute correctly here.
@@ -1290,6 +1319,7 @@ const handleBook = async () => {
       newPassengers,
       subRequests,
       metadata: {
+        presaleId: searchStore.activePresale.value?.id || undefined,
         filters: {
           departureTimeStart: searchStore.searchParams.value.presaleFilters?.departureTimeStart,
           departureTimeEnd: searchStore.searchParams.value.presaleFilters?.departureTimeEnd,
