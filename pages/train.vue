@@ -29,20 +29,27 @@
             
             <!-- Top Header & Badge -->
             <div class="flex items-start justify-between gap-3">
-              <div class="space-y-1">
-                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
-                  <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                  </span>
-                  <span>اطلاعیه رسمی پیشفروش قطار</span>
+              <div class="space-y-1.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                    </span>
+                    <span>اطلاعیه رسمی پیشفروش قطار</span>
+                  </div>
+
+                  <!-- Sleek Live Countdown Pill in Header -->
+                  <div v-if="countdownText" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-white/90 dark:bg-gray-800/90 text-amber-800 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700 shadow-2xs">
+                    <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>زمان باقیمانده:</span>
+                    <span class="font-heading font-black text-amber-900 dark:text-amber-100" dir="rtl">{{ countdownText }}</span>
+                  </div>
                 </div>
-                <h2 class="font-heading font-black text-lg sm:text-xl text-gray-900 dark:text-gray-100 pt-1">
+
+                <h2 class="font-heading font-black text-lg sm:text-xl text-gray-900 dark:text-gray-100 pt-0.5">
                   {{ toPersianDigits(searchStore.activePresale.value?.title || 'رزرو پیشفروش خودکار بلیط قطار') }}
                 </h2>
-              </div>
-              <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
             </div>
 
@@ -79,52 +86,6 @@
             <p v-if="!searchStore.activePresale.value" class="text-xs sm:text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
               در حال حاضر پیشفروش رسمی اعلام نشده است؛ اما میتوانید برای ۳۰ روز آینده درخواست خرید خودکار ثبت کنید.
             </p>
-
-            <!-- Digital Countdown Blocks -->
-            <div v-if="countdownObj.active" class="pt-2">
-              <div class="text-center mb-2.5">
-                <span class="text-xs font-black text-amber-900 dark:text-amber-200 flex items-center justify-center gap-1.5">
-                  <svg class="w-4 h-4 text-amber-600 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                  زمان باقیمانده تا شروع پیشفروش:
-                </span>
-              </div>
-
-              <div class="grid grid-cols-4 gap-2 sm:gap-3 max-w-md mx-auto">
-                <!-- Days -->
-                <div class="bg-white dark:bg-gray-800 border border-amber-300/80 dark:border-gray-700 rounded-2xl p-2.5 text-center shadow-2xs">
-                  <span class="block text-lg sm:text-2xl font-black font-heading text-amber-600 dark:text-amber-400 leading-none">
-                    {{ toPersianDigits(String(countdownObj.days)) }}
-                  </span>
-                  <span class="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 mt-1.5 block">روز</span>
-                </div>
-                <!-- Hours -->
-                <div class="bg-white dark:bg-gray-800 border border-amber-300/80 dark:border-gray-700 rounded-2xl p-2.5 text-center shadow-2xs">
-                  <span class="block text-lg sm:text-2xl font-black font-heading text-amber-600 dark:text-amber-400 leading-none">
-                    {{ toPersianDigits(String(countdownObj.hours)) }}
-                  </span>
-                  <span class="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 mt-1.5 block">ساعت</span>
-                </div>
-                <!-- Minutes -->
-                <div class="bg-white dark:bg-gray-800 border border-amber-300/80 dark:border-gray-700 rounded-2xl p-2.5 text-center shadow-2xs">
-                  <span class="block text-lg sm:text-2xl font-black font-heading text-amber-600 dark:text-amber-400 leading-none">
-                    {{ toPersianDigits(String(countdownObj.minutes)) }}
-                  </span>
-                  <span class="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 mt-1.5 block">دقیقه</span>
-                </div>
-                <!-- Seconds -->
-                <div class="bg-white dark:bg-gray-800 border border-amber-300/80 dark:border-gray-700 rounded-2xl p-2.5 text-center shadow-2xs">
-                  <span class="block text-lg sm:text-2xl font-black font-heading text-amber-600 dark:text-amber-400 leading-none">
-                    {{ toPersianDigits(String(countdownObj.seconds)) }}
-                  </span>
-                  <span class="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 mt-1.5 block">ثانیه</span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Started message -->
-            <div v-else-if="countdownObj.message" class="bg-emerald-500 text-white rounded-2xl p-3 text-center font-bold text-sm shadow-sm">
-              🎉 {{ countdownObj.message }}
-            </div>
 
           </div>
         </div>
@@ -451,51 +412,55 @@
                 
                 <!-- Step 1: Coach Type Selection -->
                 <div>
-                  <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center justify-between mb-3.5">
                     <div class="flex items-center gap-2">
                       <span class="w-7 h-7 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">۱</span>
                       <h3 class="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base">
                         انتخاب نوع واگن مورد نظر:
                       </h3>
                     </div>
-                    <div class="flex items-center gap-2 text-xs">
-                      <button
-                        type="button"
-                        @click="presaleCoachTypes = [1, 2, 3, 4, 5]"
-                        class="text-primary hover:underline font-bold"
-                      >
-                        انتخاب همه
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      @click="toggleAllPresaleCoaches"
+                      class="text-xs text-primary hover:text-teal-700 font-bold transition px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-900/40 hover:bg-teal-100 border border-teal-200 dark:border-teal-700"
+                    >
+                      {{ isAllPresaleCoachesSelected ? 'لغو همه' : 'انتخاب همه' }}
+                    </button>
                   </div>
 
-                  <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                    <label
+                  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+                    <button
+                      type="button"
                       v-for="coach in coachTypeOptions"
                       :key="coach.id"
-                      class="relative flex items-center gap-2.5 p-3 border-2 rounded-2xl cursor-pointer transition-all select-none"
+                      @click="togglePresaleCoach(coach.id)"
+                      :disabled="isCoachDisabled(coach.id)"
+                      class="relative p-3 rounded-2xl border-2 transition-all flex items-center justify-between gap-2 text-right select-none"
                       :class="isCoachDisabled(coach.id)
-                        ? 'opacity-50 cursor-not-allowed border-gray-200 bg-gray-50 dark:bg-gray-700/50'
+                        ? 'opacity-40 cursor-not-allowed border-gray-200 bg-gray-100 dark:bg-gray-800 text-gray-400'
                         : presaleCoachTypes.includes(coach.id)
-                          ? 'bg-teal-50/70 dark:bg-teal-950/40 border-primary text-primary font-bold shadow-2xs'
+                          ? 'bg-teal-50/80 dark:bg-teal-950/50 border-primary text-primary font-extrabold shadow-2xs'
                           : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-primary/40'"
-                      :title="isCoachDisabled(coach.id) ? 'ظرفیت این کوپه کمتر از تعداد مسافران شماست' : ''"
                     >
-                      <input
-                        type="checkbox"
-                        :value="coach.id"
-                        v-model="presaleCoachTypes"
-                        class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary focus:ring-2 cursor-pointer shrink-0"
-                        :disabled="isCoachDisabled(coach.id)"
-                      >
-                      <span class="text-xs sm:text-sm font-bold">{{ coach.label }}</span>
+                      <div class="flex items-center gap-2 min-w-0">
+                        <div
+                          class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-colors"
+                          :class="presaleCoachTypes.includes(coach.id) ? 'bg-primary border-primary text-white' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'"
+                        >
+                          <svg v-if="presaleCoachTypes.includes(coach.id)" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span class="text-xs sm:text-sm font-bold truncate">{{ coach.label }}</span>
+                      </div>
+
                       <span
                         v-if="isCoachDisabled(coach.id)"
-                        class="absolute -top-2 -left-1 bg-red-100 dark:bg-red-900/60 text-red-600 dark:text-red-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-red-200 dark:border-red-800 shrink-0"
+                        class="text-[9px] font-bold text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 px-1.5 py-0.5 rounded-full shrink-0"
                       >
                         ظرفیت کم
                       </span>
-                    </label>
+                    </button>
                   </div>
 
                   <!-- Coach capacity warning -->
@@ -927,6 +892,31 @@ const lowCapacityCoachIds = computed<Set<number>>(() => {
 
 const isCoachDisabled = (coachId: number): boolean => {
   return lowCapacityCoachIds.value.has(coachId)
+}
+
+const togglePresaleCoach = (id: number) => {
+  if (isCoachDisabled(id)) return
+  if (presaleCoachTypes.value.includes(id)) {
+    if (presaleCoachTypes.value.length > 1) {
+      presaleCoachTypes.value = presaleCoachTypes.value.filter(x => x !== id)
+    }
+  } else {
+    presaleCoachTypes.value.push(id)
+  }
+}
+
+const isAllPresaleCoachesSelected = computed(() => {
+  const availableIds = coachTypeOptions.filter(c => !isCoachDisabled(c.id)).map(c => c.id)
+  return availableIds.length > 0 && availableIds.every(id => presaleCoachTypes.value.includes(id))
+})
+
+const toggleAllPresaleCoaches = () => {
+  const availableIds = coachTypeOptions.filter(c => !isCoachDisabled(c.id)).map(c => c.id)
+  if (isAllPresaleCoachesSelected.value) {
+    presaleCoachTypes.value = availableIds.slice(0, 1)
+  } else {
+    presaleCoachTypes.value = availableIds
+  }
 }
 
 const coachWarningText = computed(() => {
