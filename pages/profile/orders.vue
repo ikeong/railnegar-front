@@ -113,7 +113,7 @@
                 <!-- Blocked in Wallet (for ALL requests) -->
                 <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200" title="مبلغ بلوکهشده در کیف پول">
                   <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                  <span>بلوکه در کیف پول: {{ formatPrice(getLockedAmount(order)) }} تومان</span>
+                  <span>بلوکه در کیف پول: {{ getLockedAmountDisplay(order) }}</span>
                 </div>
 
                 <!-- Deducted from Wallet (for Successful requests) -->
@@ -234,7 +234,7 @@
                     <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                     <span>مبلغ بلوکهشده در کیف پول:</span>
                   </span>
-                  <span class="text-blue-800">{{ formatPrice(getLockedAmount(order)) }} تومان</span>
+                  <span class="text-blue-800">{{ getLockedAmountDisplay(order) }}</span>
                 </div>
 
                 <!-- Deducted amount for successful requests -->
@@ -745,7 +745,41 @@ const getLockedAmount = (order: any): number => {
 
   const ticket = getTicketTotal(order)
   const service = getServiceFee(order)
-  return ticket > 0 ? (ticket + service) : service
+
+  if (ticket > 0) return ticket + service
+
+  const maxPrice = Number(order.metadata?.filters?.maxPrice || order.maxPrice || 0)
+  const pax = order.passengers?.length || order.adultsCount || 1
+  if (maxPrice > 0) {
+    const maxToman = maxPrice > 1000000 ? Math.round(maxPrice / 10) : maxPrice
+    return (maxToman * pax) + service
+  }
+
+  return service
+}
+
+const getLockedAmountDisplay = (order: any): string => {
+  if (!order) return '0 تومان'
+
+  if (order.lockedAmountRial || order.lockedRial || order.blockedRial || order.lockedAmount || order.blockedAmount) {
+    return `${formatPrice(getLockedAmount(order))} تومان`
+  }
+
+  const ticket = getTicketTotal(order)
+  const service = getServiceFee(order)
+
+  if (ticket > 0) {
+    return `${formatPrice(ticket + service)} تومان`
+  }
+
+  const maxPrice = Number(order.metadata?.filters?.maxPrice || order.maxPrice || 0)
+  const pax = order.passengers?.length || order.adultsCount || 1
+  if (maxPrice > 0) {
+    const maxToman = maxPrice > 1000000 ? Math.round(maxPrice / 10) : maxPrice
+    return `${formatPrice((maxToman * pax) + service)} تومان (سقف قیمت)`
+  }
+
+  return `${formatPrice(service)} تومان (فعلاً کارمزد)`
 }
 
 const getDeductedAmount = (order: any): number => {
