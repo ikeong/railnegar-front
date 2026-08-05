@@ -387,6 +387,9 @@
           <div class="space-y-1">
             <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
               <span>بلیط: {{ formatPrice(totalTicketPrice) }} تومان</span>
+              <span v-if="hasForeignPassengers" class="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 font-bold">
+                شامل نرخ اتباع
+              </span>
               <span v-if="isPrivateCoupe && compCapacity > 0" class="text-[10px] text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5" :title="exclusivePricingDesc">
                 کوپه دربست {{ exclusivePricingDesc ? '' : '(' + toPersianDigits(String(compCapacity)) + ' صندلی)' }}
               </span>
@@ -955,21 +958,18 @@ onMounted(async () => {
     }
   }
 
-  // Get live ticket fare for the highest-priced train, by passenger type
-  if (selectedTrains.value.length > 0) {
+  const fetchLiveTicketFare = async () => {
+    if (selectedTrains.value.length === 0) return
     ticketFareLoading.value = true
     try {
-      // Find the highest-priced train
       const bestTrain = selectedTrains.value.reduce((best: any, t: any) => 
         (t.cost || t.price || 0) > (best.cost || best.price || 0) ? t : best
       , selectedTrains.value[0])
       
-      // Count passengers by type
       const adultCount = passengerForms.value.filter(p => p.gender === 'adult_male' || p.gender === 'adult_female').length
       const childCount = passengerForms.value.filter(p => p.gender === 'boy' || p.gender === 'girl').length
       const infantCount = passengerForms.value.filter(p => p.gender === 'infant').length
       
-      // Build base request from the highest-priced train
       const baseFareReq = {
         CircularNumberSerial: Number(bestTrain.circularNumberSerial) || 0,
         MoveDate: bestTrain.moveDate || '',
@@ -982,9 +982,7 @@ onMounted(async () => {
         FromStation: String(bestTrain.fromStationId || '')
       }
       
-      // Only call if we have the required fields
       if (baseFareReq.CircularNumberSerial && baseFareReq.MoveDate) {
-        // Check if any passenger is foreign
         const anyForeign = passengerForms.value.some(p => p.isForeign)
         
         const [adultFare, childFare, infantFare] = await Promise.all([
@@ -1006,12 +1004,17 @@ onMounted(async () => {
         }
       }
     } catch {
-      // ticket-fare API not available, fall back to max price × passengers
       console.warn('ticket-fare API not available, using fallback pricing')
     } finally {
       ticketFareLoading.value = false
     }
   }
+
+  await fetchLiveTicketFare()
+
+  watch(passengerForms, () => {
+    fetchLiveTicketFare()
+  }, { deep: true })
 })
 
 // Watch for isForeign changes and re-fetch ticket-fare
@@ -1095,18 +1098,37 @@ const totalTicketPrice = computed(() => {
     return 0
   }
 
-  // Normal mode: try API prices first if available and non-zero
-  if (ticketPrices.value && (ticketPrices.value.adult || ticketPrices.value.child || ticketPrices.value.infant)) {
-    const adultCount = passengerForms.value.filter(p => p.gender === 'adult_male' || p.gender === 'adult_female').length
-    const childCount = passengerForms.value.filter(p => p.gender === 'boy' || p.gender === 'girl').length
-    const infantCount = passengerForms.value.filter(p => p.gender === 'infant').length
-    return (adultCount * ticketPrices.value.adult) + (childCount * ticketPrices.value.child) + (infantCount * ticketPrices.value.infant)
-  }
-  // Fallback: use max price from selected trains
-  // NOTE: selectedTrains come from train-results.vue where cost was already converted Rial→Toman (/10)
+  const hasForeign = passengerForms.value.some(p => p.isForeign)
+  const maxSeatPrice = Math.max(...selectedTrains.value.map((t: any) => Number(t.cost || t.price || 0)), 0)
+
+  // Calculate passenger by passenger considering foreign status
+  let total = 0
+  passengerForms.value.forEach(p => {
+    if (p.isForeign) {
+      // Foreign passenger (اتباع): Full adult ticket fare applies (no child/infant tariff discount)
+      const foreignAdultFare = ticketPrices.value?.adult || maxSeatPrice
+      total += foreignAdultFare
+    } else {
+      if (p.gender === 'adult_male' || p.gender === 'adult_female') {
+        total += (ticketPrices.value?.adult || maxSeatPrice)
+      } else if (p.gender === 'boy' || p.gender === 'girl') {
+        total += (ticketPrices.value?.child || Math.round(maxSeatPrice * 0.5))
+      } else if (p.gender === 'infant') {
+        total += (ticketPrices.value?.infant || Math.round(maxSeatPrice * 0.1))
+      } else {
+        total += (ticketPrices.value?.adult || maxSeatPrice)
+      }
+    }
+  })
+
+  if (total > 0) return total
+
   if (selectedTrains.value.length === 0 || !totalPassengers.value) return 0
-  const maxPrice = Math.max(...selectedTrains.value.map((t: any) => Number(t.cost || t.price || 0)))
-  return maxPrice * totalPassengers.value
+  return maxSeatPrice * totalPassengers.value
+})
+
+const hasForeignPassengers = computed(() => {
+  return passengerForms.value.some(p => p.isForeign)
 })
 
 const totalServiceCharge = computed(() => {
