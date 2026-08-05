@@ -109,17 +109,18 @@
 
             <!-- Price + Actions -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-gray-100">
-              <div>
-                <span v-if="getOrderTotalAmount(order) > 0">
-                  <span class="text-xs text-gray-500">مبلغ: </span>
-                  <span class="font-bold text-primary">{{ formatPrice(getOrderTotalAmount(order)) }} تومان</span>
-                </span>
-                <span v-else>
-                  <span class="text-xs text-gray-500">مبلغ: </span>
-                  <span class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
-                    پس از پیدا شدن قطار
-                  </span>
-                </span>
+              <div class="flex flex-wrap items-center gap-2">
+                <!-- Blocked in Wallet (for ALL requests) -->
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200" title="مبلغ بلوکهشده در کیف پول">
+                  <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                  <span>بلوکه در کیف پول: {{ formatPrice(getLockedAmount(order)) }} تومان</span>
+                </div>
+
+                <!-- Deducted from Wallet (for Successful requests) -->
+                <div v-if="isSuccessful(order.status)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200" title="مبلغ برداشتشده از کیف پول">
+                  <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                  <span>برداشتشده: {{ formatPrice(getDeductedAmount(order)) }} تومان</span>
+                </div>
               </div>
               <div class="flex items-center gap-2 flex-wrap sm:justify-end">
                 <button
@@ -207,7 +208,7 @@
                 <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 <span>جزئیات مالی و وضعیت کیف پول</span>
               </div>
-              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3.5 space-y-2 text-xs">
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3.5 space-y-2.5 text-xs">
                 <div class="flex justify-between items-center">
                   <span class="text-gray-500">قیمت بلیط قطار:</span>
                   <span class="font-bold text-gray-900 dark:text-gray-100">
@@ -221,11 +222,30 @@
                   </span>
                 </div>
                 <div class="flex justify-between items-center pt-2 border-t border-gray-100 dark:border-gray-700 font-bold text-sm">
-                  <span class="text-gray-700 dark:text-gray-300">مجموع پرداختی:</span>
+                  <span class="text-gray-700 dark:text-gray-300">مجموع کل برآورد:</span>
                   <span class="text-primary">
                     {{ getOrderTotalAmount(order) > 0 ? `${formatPrice(getOrderTotalAmount(order))} تومان` : `${formatPrice(getServiceFee(order))} تومان + قیمت بلیط` }}
                   </span>
                 </div>
+
+                <!-- Blocked amount for all requests -->
+                <div class="flex justify-between items-center p-2.5 rounded-lg bg-blue-50/70 border border-blue-100 text-blue-900 font-bold">
+                  <span class="flex items-center gap-1.5 text-blue-700">
+                    <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <span>مبلغ بلوکهشده در کیف پول:</span>
+                  </span>
+                  <span class="text-blue-800">{{ formatPrice(getLockedAmount(order)) }} تومان</span>
+                </div>
+
+                <!-- Deducted amount for successful requests -->
+                <div v-if="isSuccessful(order.status)" class="flex justify-between items-center p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-100 text-emerald-900 font-bold">
+                  <span class="flex items-center gap-1.5 text-emerald-700">
+                    <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    <span>مبلغ برداشتشده نهایی از کیف پول:</span>
+                  </span>
+                  <span class="text-emerald-800">{{ formatPrice(getDeductedAmount(order)) }} تومان</span>
+                </div>
+
                 <div class="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between flex-wrap gap-2">
                   <span class="text-gray-500">وضعیت در کیف پول:</span>
                   <span :class="['px-2.5 py-0.5 rounded-full text-[11px] font-bold border', getWalletLockBadge(order.status).style]">
@@ -709,6 +729,34 @@ const getTicketTotal = (order: any): number => {
     }
   }
   return 0
+}
+
+const isSuccessful = (status: string): boolean => {
+  return ['COMPLETED', 'TICKETED', 'PAID', 'BOOKED'].includes(status)
+}
+
+const getLockedAmount = (order: any): number => {
+  if (!order) return 0
+  if (order.lockedAmountRial) return Math.round(Number(order.lockedAmountRial) / 10)
+  if (order.lockedRial) return Math.round(Number(order.lockedRial) / 10)
+  if (order.blockedRial) return Math.round(Number(order.blockedRial) / 10)
+  if (order.lockedAmount) return Number(order.lockedAmount) > 1000000 ? Math.round(Number(order.lockedAmount) / 10) : Number(order.lockedAmount)
+  if (order.blockedAmount) return Number(order.blockedAmount) > 1000000 ? Math.round(Number(order.blockedAmount) / 10) : Number(order.blockedAmount)
+
+  const ticket = getTicketTotal(order)
+  const service = getServiceFee(order)
+  return ticket > 0 ? (ticket + service) : service
+}
+
+const getDeductedAmount = (order: any): number => {
+  if (!order) return 0
+  if (order.deductedAmountRial) return Math.round(Number(order.deductedAmountRial) / 10)
+  if (order.spentRial) return Math.round(Number(order.spentRial) / 10)
+  if (order.paidAmountRial) return Math.round(Number(order.paidAmountRial) / 10)
+  if (order.deductedAmount) return Number(order.deductedAmount) > 1000000 ? Math.round(Number(order.deductedAmount) / 10) : Number(order.deductedAmount)
+  if (order.paidAmount) return Number(order.paidAmount) > 1000000 ? Math.round(Number(order.paidAmount) / 10) : Number(order.paidAmount)
+
+  return getOrderTotalAmount(order)
 }
 
 const getWalletLockBadge = (status: string) => {
