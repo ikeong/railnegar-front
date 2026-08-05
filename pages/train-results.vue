@@ -70,17 +70,45 @@
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="text-center py-12">
-        <p class="text-red-500 font-bold mb-2">خطا</p>
-        <p class="text-gray-600">{{ error }}</p>
-        <button @click="fetchAllResults" class="mt-4 px-6 py-2 bg-primary text-white rounded-lg font-bold hover:bg-teal-600 transition">
-          تلاش مجدد
-        </button>
+      <div v-else-if="error" class="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-300 dark:border-amber-700 rounded-2xl p-6 text-center max-w-xl mx-auto shadow-sm my-6">
+        <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+          ⚡
+        </div>
+        <h3 class="font-bold text-amber-900 dark:text-amber-200 text-base sm:text-lg mb-2">
+          عدم دریافت قطار از سرویس رجا (احتمال اختلال سرویس یا زمان بکآپ رجا)
+        </h3>
+        <p class="text-xs sm:text-sm text-amber-800 dark:text-amber-300 leading-relaxed mb-3">
+          {{ error }}
+        </p>
+        <p class="text-xs text-amber-700 dark:text-amber-400 mb-5">
+          نیازی به نگرانی نیست! میتوانید همین حالا درخواست خرید خودکار را ثبت کنید تا ربات ریلنگار در پسزمینه به محض باز شدن ظرفیت، خرید را انجام دهد.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button @click="fetchAllResults" class="w-full sm:w-auto px-5 py-2.5 bg-white dark:bg-gray-700 border border-amber-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-bold text-xs hover:bg-gray-50 transition">
+            تلاش مجدد
+          </button>
+          <button @click="handleNextWithoutTrains()" class="w-full sm:w-auto px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-xs sm:text-sm hover:bg-teal-600 transition shadow-md flex items-center justify-center gap-2">
+            <span>ثبت درخواست خرید خودکار</span>
+            <ArrowLeftIcon class="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <!-- Empty State -->
-      <div v-else-if="groupedResults.length === 0" class="text-center py-12">
-        <p class="text-gray-600">هیچ قطاری برای این مسیرها یافت نشد</p>
+      <div v-else-if="groupedResults.length === 0" class="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-300 dark:border-amber-700 rounded-2xl p-6 text-center max-w-xl mx-auto shadow-sm my-6">
+        <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+          🚂
+        </div>
+        <h3 class="font-bold text-amber-900 dark:text-amber-200 text-base sm:text-lg mb-2">
+          قطاری در این تاریخ پیدا نشد یا سرویس رجا در حال بهروزرسانی است
+        </h3>
+        <p class="text-xs sm:text-sm text-amber-800 dark:text-amber-300 leading-relaxed mb-5">
+          میتوانید درخواست خرید خودکار ثبت کنید تا ربات ریلنگار به صورت ۲۴ ساعته ظرفیت قطارها را بررسی کرده و به محض باز شدن صندلی، آن را برای شما رزرو کند.
+        </p>
+        <button @click="handleNextWithoutTrains()" class="px-6 py-3 bg-primary text-white rounded-xl font-bold text-xs sm:text-sm hover:bg-teal-600 transition shadow-md inline-flex items-center gap-2">
+          <span>ثبت درخواست خرید خودکار در پسزمینه</span>
+          <ArrowLeftIcon class="w-4 h-4" />
+        </button>
       </div>
 
       <!-- Grouped Results -->
@@ -342,9 +370,18 @@
                   </div>
                 </div>
               </div>
-              <p v-if="getFilteredCount(routeGroup) === 0" class="text-center text-sm text-gray-500 py-4">
-                هیچ قطاری با فیلترهای انتخاب شده یافت نشد
-              </p>
+              <div v-if="getFilteredCount(routeGroup) === 0" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 text-center border border-gray-200 dark:border-gray-600 my-2">
+                <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  قطاری با فیلترها یا ظرفیت موجود یافت نشد.
+                </p>
+                <button
+                  @click="handleNextWithoutTrains(routeGroup.route)"
+                  class="text-xs text-primary font-bold hover:underline inline-flex items-center gap-1"
+                >
+                  <span>ثبت درخواست خرید خودکار برای این مسیر</span>
+                  <ArrowLeftIcon class="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -883,17 +920,25 @@ const fetchAllResults = async (dates: string[], routes: SearchRoute[]) => {
       batch.map(async (combo) => {
         try {
           const shamsiDate = convertToShamsi(combo.date)
-          const result = await useApiFetch<any>('/api/v1/public/search', {
-            method: 'GET',
-            params: {
-              from: combo.route.from,
-              to: combo.route.to,
-              date: shamsiDate,
-              searchType: route.query.sm || undefined,
-              // v2.4.0: pass passenger count so backend flags non-bookable trains
-              passengers: passengerCount.value > 1 ? passengerCount.value : undefined
+          let result: any = null
+          try {
+            result = await useApiFetch<any>('/api/v1/public/search', {
+              method: 'GET',
+              params: {
+                from: combo.route.from,
+                to: combo.route.to,
+                date: shamsiDate,
+                searchType: route.query.sm || undefined,
+                passengers: passengerCount.value > 1 ? passengerCount.value : undefined
+              }
+            })
+          } catch (err: any) {
+            // 400 error means no train found for this specific route/date combination
+            if (err?.response?.status === 400 || err?.status === 400) {
+              return { combo, trains: [] }
             }
-          })
+            throw err
+          }
           
           let rawTrains: any[] = []
           if (result && result.data) {
@@ -1085,6 +1130,77 @@ const handleNext = () => {
     localStorage.setItem('rn-pending-subrequests', JSON.stringify(subRequests))
     localStorage.setItem('rn-pending-session', sessionUuid)
     
+    navigateTo(`/auth/login?redirect=/train-passengers/${sessionUuid}`)
+  }
+}
+
+const handleNextWithoutTrains = (specificRoute?: SearchRoute) => {
+  const searchStore = useSearch()
+  const { createSession } = useBookingSession()
+  const storeParams = searchStore.searchParams.value || {}
+
+  let routes: SearchRoute[] = []
+  if (specificRoute) {
+    routes = [specificRoute]
+  } else if (storeParams.routes && storeParams.routes.length > 0) {
+    routes = storeParams.routes
+  } else if (route.query.origins && route.query.destinations) {
+    const origins = (route.query.origins as string || '').split(',').map(Number).filter(n => n > 0)
+    const destinations = (route.query.destinations as string || '').split(',').map(Number).filter(n => n > 0)
+    origins.forEach(fromId => {
+      destinations.forEach(toId => {
+        routes.push({
+          from: fromId,
+          to: toId,
+          fromName: getCityName(fromId),
+          toName: getCityName(toId)
+        })
+      })
+    })
+  }
+
+  let dates: string[] = []
+  if (storeParams.dates && storeParams.dates.length > 0) {
+    dates = storeParams.dates
+  } else if (storeParams.date) {
+    dates = [storeParams.date]
+  } else if (route.query.dates) {
+    dates = (route.query.dates as string).split(',').filter(Boolean)
+  }
+
+  const subRequests: { fromStationId: number; toStationId: number; travelDate: string }[] = []
+  routes.forEach(r => {
+    dates.forEach(d => {
+      if (r.from && r.to && d) {
+        subRequests.push({
+          fromStationId: Number(r.from),
+          toStationId: Number(r.to),
+          travelDate: d
+        })
+      }
+    })
+  })
+
+  const sessionUuid = createSession({
+    selectedTrains: [],
+    passengers: passengerDetailsObj.value || passengerCount.value,
+    compartmentType: searchStore.searchParams.value.compartmentType || 'regular',
+    searchMode: (route.query.sm as string) || 'normal',
+    subRequests,
+    scattered: searchStore.searchParams.value.compartmentType === 'scattered'
+  })
+
+  searchStore.searchParams.value.selectedTrainIds = []
+  searchStore.setSelectedTrain([])
+
+  if (isLoggedIn.value) {
+    navigateTo(`/train-passengers/${sessionUuid}`)
+  } else {
+    localStorage.setItem('rn-pending-trains', JSON.stringify([]))
+    localStorage.setItem('rn-pending-passengers', String(passengerCount.value))
+    localStorage.setItem('rn-pending-subrequests', JSON.stringify(subRequests))
+    localStorage.setItem('rn-pending-session', sessionUuid)
+
     navigateTo(`/auth/login?redirect=/train-passengers/${sessionUuid}`)
   }
 }

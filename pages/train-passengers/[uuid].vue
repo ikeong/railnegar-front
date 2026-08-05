@@ -65,8 +65,20 @@
           </div>
         </div>
       </div>
-      <div v-else class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 p-6 mb-6">
-        <p class="text-center text-gray-500 py-8">هیچ قطاری انتخاب نشده است</p>
+      <div v-else class="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-300 dark:border-amber-700 rounded-2xl p-5 mb-6 shadow-sm">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold shrink-0 mt-0.5">
+            ⚡
+          </div>
+          <div>
+            <h3 class="font-bold text-amber-900 dark:text-amber-200 text-sm sm:text-base mb-1">
+              ثبت درخواست خرید خودکار در پسزمینه (زمان بکآپ یا عدم وجود قطار لحظهای)
+            </h3>
+            <p class="text-xs sm:text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
+              قطار مشخصی انتخاب نشده است. پس از تکمیل اطلاعات مسافران و ثبت درخواست، ربات ریلنگار در پسزمینه به صورت ۲۴ ساعته ظرفیت قطارهای این مسیر را پایش کرده و به محض باز شدن صندلی، رزرو را برای شما انجام میدهد.
+            </p>
+          </div>
+        </div>
       </div>
 
       <!-- Service Charges -->
@@ -390,7 +402,7 @@
           </div>
           <button 
             @click="handleBook"
-            :disabled="selectedTrains.length === 0 || !termsAccepted || bookingLoading"
+            :disabled="!termsAccepted || bookingLoading"
             class="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-teal-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center gap-2"
           >
             <svg v-if="bookingLoading" class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -510,6 +522,7 @@ const searchStore = useSearch()
 const { getProfile, isAgencyTier } = useProfile()
 const { getBalance } = useWallet()
 const { createBookingRequest } = useOrders()
+const { getSession, touchSession, deleteSession } = useBookingSession()
 const { toast, showToast } = useToast()
 
 const bookingLoading = ref(false)
@@ -636,6 +649,7 @@ const openTermsModal = () => {
 
 // Read selected trains from store
 const selectedTrains = ref<any[]>([])
+const sessionSubRequests = ref<{ fromStationId: number; toStationId: number; travelDate: string }[]>([])
 
 // Read passenger count from search params
 const totalPassengers = ref(0)
@@ -849,7 +863,10 @@ onMounted(async () => {
     )
   }
   
-  // Fallback: try from localStorage sub-requests
+  // Fallback: try from session or localStorage sub-requests
+  if (subRequests.length === 0 && session.subRequests?.length) {
+    subRequests = session.subRequests
+  }
   if (subRequests.length === 0) {
     const saved = localStorage.getItem('rn-pending-subrequests')
     if (saved) {
@@ -859,6 +876,24 @@ onMounted(async () => {
       } catch {}
     }
   }
+  if (subRequests.length === 0) {
+    const storeParams = searchStore.searchParams.value || {}
+    const routes = storeParams.routes || []
+    const dates = storeParams.dates || (storeParams.date ? [storeParams.date] : [])
+    routes.forEach((r: any) => {
+      dates.forEach((d: string) => {
+        if (r.from && r.to && d) {
+          subRequests.push({
+            fromStationId: Number(r.from),
+            toStationId: Number(r.to),
+            travelDate: d
+          })
+        }
+      })
+    })
+  }
+
+  sessionSubRequests.value = subRequests
 
   // Calculate pricing from API
   if (subRequests.length > 0 && totalPassengers.value > 0) {
@@ -1182,7 +1217,7 @@ const handleBook = async () => {
     const childCount = passengerForms.value.filter(p => ['boy', 'girl'].includes(p.gender)).length
 
     // Sub-requests from selected trains (deduped by from+to+date)
-    const subRequests = selectedTrains.value.map((t: any) => ({
+    let subRequests = selectedTrains.value.map((t: any) => ({
       fromStationId: Number(t.fromStationId),
       toStationId: Number(t.toStationId),
       travelDate: t.travelDate || t.shamsiDate || ''
@@ -1190,6 +1225,26 @@ const handleBook = async () => {
       sr.fromStationId && sr.toStationId && sr.travelDate &&
       arr.findIndex((s: any) => s.fromStationId === sr.fromStationId && s.toStationId === sr.toStationId && s.travelDate === sr.travelDate) === i
     )
+
+    if (subRequests.length === 0 && sessionSubRequests.value.length > 0) {
+      subRequests = sessionSubRequests.value
+    }
+    if (subRequests.length === 0) {
+      const storeParams = searchStore.searchParams.value || {}
+      const routes = storeParams.routes || []
+      const dates = storeParams.dates || (storeParams.date ? [storeParams.date] : [])
+      routes.forEach((r: any) => {
+        dates.forEach((d: string) => {
+          if (r.from && r.to && d) {
+            subRequests.push({
+              fromStationId: Number(r.from),
+              toStationId: Number(r.to),
+              travelDate: d
+            })
+          }
+        })
+      })
+    }
 
     const bookingPayload = {
       priority: 5,
