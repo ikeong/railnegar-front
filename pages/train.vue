@@ -47,7 +47,7 @@
                   </div>
                 </div>
 
-                <h2 class="font-heading font-black text-lg sm:text-xl text-gray-900 dark:text-gray-100 pt-0.5">
+                <h2 class="font-heading font-black text-lg sm:text-xl text-gray-900 dark:text-gray-100 mt-3 pt-0.5">
                   {{ toPersianDigits(searchStore.activePresale.value?.title || 'رزرو پیشفروش خودکار بلیط قطار') }}
                 </h2>
               </div>
