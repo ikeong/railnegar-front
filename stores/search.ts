@@ -174,11 +174,16 @@ export const useSearch = () => {
       const response = await $fetch<any>('https://railapi.happyupload.com/api/v1/public/stations')
       if (response && response.stations && Array.isArray(response.stations)) {
         cities.length = 0 // Clear array but keep reference
-        response.stations.forEach(s => {
+        const seenNames = new Set<string>()
+        response.stations.forEach((s: any) => {
+          const cleanName = String(s.nameFa || '').trim()
+          if (!cleanName) return
+          if (seenNames.has(cleanName)) return
+          seenNames.add(cleanName)
           cities.push({
             id: s.id,
-            name: s.nameFa,
-            isHub: s.isHub
+            name: cleanName,
+            isHub: !!s.isHub
           })
         })
       }
