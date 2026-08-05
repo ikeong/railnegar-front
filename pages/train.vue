@@ -565,7 +565,9 @@
         <div class="bg-white w-full md:w-[480px] rounded-t-3xl md:rounded-2xl h-[85vh] md:h-auto md:max-h-[80vh] flex flex-col z-10 shadow-2xl relative">
           <!-- Header -->
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white rounded-t-3xl md:rounded-t-2xl shrink-0">
-            <h3 class="font-bold text-lg text-gray-800">انتخاب مبدا</h3>
+            <h3 class="font-bold text-lg text-gray-800">
+              {{ searchParams.originsMode === 'multiple' ? 'انتخاب چند مبدا' : 'انتخاب مبدا' }}
+            </h3>
             <button @click="originModalOpen = false" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -618,6 +620,34 @@
               </li>
             </ul>
           </div>
+
+          <!-- Footer -->
+          <div class="px-5 py-3.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between gap-3 shrink-0 rounded-b-3xl md:rounded-b-2xl">
+            <div class="text-xs text-gray-600 font-bold">
+              <span v-if="searchParams.originsMode === 'multiple'">
+                {{ searchParams.origins.length > 0 ? `${toPersianDigits(String(searchParams.origins.length))} مبدا انتخاب شد` : 'هیچ مبدایی انتخاب نشده' }}
+              </span>
+              <span v-else>
+                {{ searchParams.origins.length > 0 ? getCityName(searchParams.origins[0]) : 'مبدایی انتخاب نشده' }}
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="originModalOpen = false"
+                class="px-4 py-2 text-xs font-bold text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl transition shadow-2xs"
+              >
+                بستن
+              </button>
+              <button
+                type="button"
+                @click="originModalOpen = false"
+                class="px-5 py-2 text-xs font-bold bg-primary text-white hover:bg-teal-600 rounded-xl transition shadow-sm"
+              >
+                تایید
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </Transition>
@@ -629,7 +659,9 @@
         <div class="bg-white w-full md:w-[480px] rounded-t-3xl md:rounded-2xl h-[85vh] md:h-auto md:max-h-[80vh] flex flex-col z-10 shadow-2xl relative">
           <!-- Header -->
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white rounded-t-3xl md:rounded-t-2xl shrink-0">
-            <h3 class="font-bold text-lg text-gray-800">انتخاب مقصد</h3>
+            <h3 class="font-bold text-lg text-gray-800">
+              {{ searchParams.destinationMode === 'multiple' ? 'انتخاب چند مقصد' : 'انتخاب مقصد' }}
+            </h3>
             <button @click="destModalOpen = false" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -681,6 +713,34 @@
                 شهری با این نام یافت نشد
               </li>
             </ul>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-5 py-3.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between gap-3 shrink-0 rounded-b-3xl md:rounded-b-2xl">
+            <div class="text-xs text-gray-600 font-bold">
+              <span v-if="searchParams.destinationMode === 'multiple'">
+                {{ searchParams.destinations.length > 0 ? `${toPersianDigits(String(searchParams.destinations.length))} مقصد انتخاب شد` : 'هیچ مقصدی انتخاب نشده' }}
+              </span>
+              <span v-else>
+                {{ searchParams.destination ? getCityName(searchParams.destination) : 'مقصدی انتخاب نشده' }}
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="destModalOpen = false"
+                class="px-4 py-2 text-xs font-bold text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl transition shadow-2xs"
+              >
+                بستن
+              </button>
+              <button
+                type="button"
+                @click="destModalOpen = false"
+                class="px-5 py-2 text-xs font-bold bg-primary text-white hover:bg-teal-600 rounded-xl transition shadow-sm"
+              >
+                تایید
+              </button>
+            </div>
           </div>
         </div>
       </div>
