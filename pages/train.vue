@@ -493,11 +493,13 @@
 
                 <!-- Step 2: Time Range Selection -->
                 <div class="pt-4 border-t border-gray-100 dark:border-gray-700">
-                  <div class="flex items-center gap-2 mb-3">
-                    <span class="w-7 h-7 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">۲</span>
-                    <h3 class="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base">
-                      انتخاب بازه زمانی حرکت قطار:
-                    </h3>
+                  <div class="flex items-center justify-between mb-3.5">
+                    <div class="flex items-center gap-2">
+                      <span class="w-7 h-7 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">۲</span>
+                      <h3 class="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base">
+                        انتخاب بازه زمانی حرکت قطار (چند انتخابی):
+                      </h3>
+                    </div>
                   </div>
 
                   <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -505,15 +507,24 @@
                       type="button"
                       v-for="tr in timeRangeOptions"
                       :key="tr.value"
-                      @click="presaleTimeRange = tr.value"
+                      @click="togglePresaleTimeRange(tr.value)"
                       class="p-3 rounded-2xl border-2 transition-all flex flex-col text-right justify-between select-none"
-                      :class="presaleTimeRange === tr.value
+                      :class="presaleTimeRanges.includes(tr.value)
                         ? 'bg-primary text-white border-primary shadow-sm'
                         : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-primary/40'"
                     >
                       <div class="flex items-center justify-between mb-1.5">
-                        <span class="font-extrabold text-xs sm:text-sm">{{ tr.labelTitle }}</span>
-                        <span v-if="presaleTimeRange === tr.value" class="w-2 h-2 rounded-full bg-white"></span>
+                        <div class="flex items-center gap-2 min-w-0">
+                          <div
+                            class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-colors"
+                            :class="presaleTimeRanges.includes(tr.value) ? 'bg-white text-primary border-white' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'"
+                          >
+                            <svg v-if="presaleTimeRanges.includes(tr.value)" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <span class="font-extrabold text-xs sm:text-sm truncate">{{ tr.labelTitle }}</span>
+                        </div>
                       </div>
                       <span class="text-[11px] opacity-85 font-bold" dir="rtl">
                         {{ toPersianDigits(tr.labelDesc) }}
@@ -954,6 +965,26 @@ const timeRangeOptions = [
 
 const presaleCoachTypes = ref([1, 2, 3, 4, 5])
 const presaleTimeRange = ref("00:00-24:00")
+const presaleTimeRanges = ref<string[]>(["00:00-24:00"])
+
+const togglePresaleTimeRange = (range: string) => {
+  if (range === "00:00-24:00") {
+    presaleTimeRanges.value = ["00:00-24:00"]
+    presaleTimeRange.value = "00:00-24:00"
+    return
+  }
+  let list = presaleTimeRanges.value.filter(r => r !== "00:00-24:00")
+  if (list.includes(range)) {
+    list = list.filter(r => r !== range)
+  } else {
+    list.push(range)
+  }
+  if (list.length === 0) {
+    list = ["00:00-24:00"]
+  }
+  presaleTimeRanges.value = list
+  presaleTimeRange.value = list[0] ?? "00:00-24:00"
+}
 const countdownText = ref("")
 const countdownObj = reactive({
   active: false,
@@ -1264,8 +1295,8 @@ const handleSearch = () => {
     exclusiveCoupe: searchParams.value.compartmentType === 'private',
     presaleFilters: searchMode.value === 'presale' ? {
       coachTypes: presaleCoachTypes.value,
-      departureTimeStart: presaleTimeRange.value.split('-')[0],
-      departureTimeEnd: presaleTimeRange.value.split('-')[1]
+      departureTimeStart: presaleTimeRanges.value.map(r => r.split('-')[0] || '00:00').sort()[0] || '00:00',
+      departureTimeEnd: presaleTimeRanges.value.map(r => r.split('-')[1] || '24:00').sort().slice(-1)[0] || '24:00'
     } : undefined
   }
   searchStore.setParams(paramsToSave)
